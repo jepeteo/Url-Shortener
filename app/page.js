@@ -7,8 +7,15 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // implement the API call here later
-    console.log("Submitting:", url);
+    const response = await fetch("/api/shorten", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ url }),
+    });
+    const data = await response.json();
+    setShortUrl(data.shortUrl);
   };
 
   return (

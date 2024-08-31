@@ -1,17 +1,23 @@
-import { redirect } from 'next/navigation'
-import clientPromise from '../../lib/mongodb'
+import { redirect } from "next/navigation";
+import clientPromise from "../../lib/mongodb";
 
 export default async function ShortUrlRedirect({ params }) {
-  const { shortCode } = params
+  const { shortCode } = params;
 
-  const client = await clientPromise
-  const db = client.db("urlShortener")
+  const client = await clientPromise;
+  const db = client.db("urlShortener");
 
-  const urlEntry = await db.collection("urls").findOne({ shortCode })
+  const urlEntry = await db
+    .collection("urls")
+    .findOneAndUpdate(
+      { shortCode },
+      { $inc: { visits: 1 } },
+      { returnDocument: "after" }
+    );
 
-  if (urlEntry) {
-    redirect(urlEntry.originalUrl)
+  if (urlEntry.value) {
+    redirect(urlEntry.value.originalUrl);
   } else {
-    redirect('/')  // Redirect to home page if URL not found
+    redirect("/");
   }
 }

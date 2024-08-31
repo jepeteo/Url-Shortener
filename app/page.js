@@ -4,18 +4,31 @@ import { useState } from "react";
 export default function Home() {
   const [url, setUrl] = useState("");
   const [shortUrl, setShortUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("/api/shorten", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url }),
-    });
-    const data = await response.json();
-    setShortUrl(data.shortUrl);
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/shorten", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to shorten URL");
+      }
+      const data = await response.json();
+      setShortUrl(data.shortUrl);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -32,11 +45,15 @@ export default function Home() {
         />
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+          disabled={isLoading}
         >
-          Shorten URL
+          {isLoading ? "Shortening..." : "Shorten URL"}
         </button>
       </form>
+      {error && (
+        <p className="mt-4 text-red-500">{error}</p>
+      )}
       {shortUrl && (
         <div className="mt-8">
           <p>Your shortened URL:</p>

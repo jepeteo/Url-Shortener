@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "../../../lib/mongodb";
 import { nanoid } from "nanoid";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 function isValidUrl(url) {
   try {
@@ -12,6 +13,11 @@ function isValidUrl(url) {
 }
 
 export async function POST(request) {
+  const ip = request.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+  }
+
   const { url } = await request.json();
 
   if (!isValidUrl(url)) {

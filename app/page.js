@@ -41,6 +41,9 @@ export default function Home() {
         <>
           <p>Signed in as {session.user.email}</p>
           <button onClick={() => signOut()}>Sign out</button>
+          <a href="/dashboard" className="mt-4 text-blue-500 hover:underline">
+            Go to Dashboard
+          </a>
           <form onSubmit={handleSubmit} className="w-full max-w-md">
             <input
               type="url"
@@ -71,7 +74,12 @@ export default function Home() {
       ) : (
         <>
           <button onClick={() => signIn()}>Sign in</button>
-          <a href="/auth/register" className="mt-4 text-blue-500 hover:underline">Register</a>
+          <a
+            href="/auth/register"
+            className="mt-4 text-blue-500 hover:underline"
+          >
+            Register
+          </a>
         </>
       )}
     </main>

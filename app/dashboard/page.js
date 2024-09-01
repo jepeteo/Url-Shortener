@@ -27,9 +27,13 @@ export default function Dashboard() {
   };
 
   const handleRemove = async (id) => {
-    const response = await fetch("/api/urls/$id", { method: "DELETE" });
-    if (response.ok) {
-      setUrls(urls.filter((url) => url._id !== id));
+    if (id && id.length === 24) {
+      const response = await fetch(`/api/urls/${id}`, { method: "DELETE" });
+      if (response.ok) {
+        setUrls(urls.filter((url) => url._id !== id));
+      }
+    } else {
+      console.error("Invalid ObjectId");
     }
   };
 

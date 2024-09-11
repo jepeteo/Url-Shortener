@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import clientPromise from "../../../lib/mongodb";
 import { nanoid } from "nanoid";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route";
+
+
 
 function isValidUrl(url) {
   try {
@@ -13,6 +17,12 @@ function isValidUrl(url) {
 }
 
 export async function POST(request) {
+  const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
   const ip = request.headers.get("x-forwarded-for") || "unknown";
   if (!checkRateLimit(ip)) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
@@ -39,10 +49,9 @@ export async function POST(request) {
     createdAt: new Date(),
     expiresAt: expiresAt,
     userId: session.user.id,
-    visits: 0,
+    clicks: 0,
     lastClickedAt: null,
     clickData: []
-  
   });
 
   return NextResponse.json({ shortUrl });

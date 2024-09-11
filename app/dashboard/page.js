@@ -30,6 +30,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 import { Trash2, BarChart2, QrCode } from "lucide-react";
 import Link from "next/link";
 
@@ -110,6 +112,17 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto p-4">
+      {session?.user?.email === "demo@example.com" && (
+        <Alert className="mb-4">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>Demo Account</AlertTitle>
+          <AlertDescription>
+            You are currently using a demo account. Some features may be
+            limited.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <h1 className="text-2xl font-bold mb-4">Your Dashboard</h1>
 
       <div className="grid gap-4 md:grid-cols-3 mb-6">

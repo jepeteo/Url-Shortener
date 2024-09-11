@@ -62,11 +62,23 @@ export default function SignIn() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter>
-          <Button onClick={() => signIn("github")} className="w-full">
+        <CardFooter className="flex justify-center flex-col">
+          <Button onClick={() => signIn("github")} className="w-full mb-2">
             Sign in with GitHub
           </Button>
+          <Button
+            onClick={() =>
+              signIn("credentials", {
+                email: "demo@example.com",
+                password: "demopassword",
+              })
+            }
+            className="w-full"
+          >
+            Try Demo Account
+          </Button>
         </CardFooter>
+
         <CardFooter className="flex justify-center">
           <Link href="/auth/register">
             <Button variant="link">Don't have an account? Register here</Button>

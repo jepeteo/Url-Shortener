@@ -3,32 +3,31 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import { QRCodeSVG } from "qrcode.react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, BarChart2, QrCode } from "lucide-react";
+import Link from "next/link";
 
 export default function Dashboard() {
   const [urls, setUrls] = useState([]);
   const [showQR, setShowQR] = useState(null);
+  const [sortMethod, setSortMethod] = useState("createdAt");
+
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -48,6 +47,15 @@ export default function Dashboard() {
     }
   };
 
+  const sortedUrls = [...urls].sort((a, b) => {
+    if (sortMethod === "clicks") {
+      return b.clicks - a.clicks;
+    } else if (sortMethod === "createdAt") {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    }
+    return 0;
+  });
+
   const handleRemove = async (id) => {
     if (id && id.length === 24) {
       const response = await fetch(`/api/urls/${id}`, { method: "DELETE" });
@@ -61,6 +69,21 @@ export default function Dashboard() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Your Shortened URLs</h1>
+      <div className="mb-4">
+        <Select
+          onValueChange={(value) => setSortMethod(value)}
+          defaultValue="createdAt"
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="createdAt">Date Created </SelectItem>
+            <SelectItem value="clicks">Number of Clicks </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -73,7 +96,7 @@ export default function Dashboard() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {urls.map((url) => (
+          {sortedUrls.map((url) => (
             <TableRow key={url._id}>
               <TableCell>{url.originalUrl}</TableCell>
               <TableCell>

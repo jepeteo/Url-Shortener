@@ -72,6 +72,14 @@ export default function SignIn() {
             <Button variant="link">Don't have an account? Register here</Button>
           </Link>
         </CardFooter>
+        <div className="text-sm text-center pb-4">
+          <Link
+            href="/auth/reset-password"
+            className="text-blue-500 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
       </Card>
     </div>
   );

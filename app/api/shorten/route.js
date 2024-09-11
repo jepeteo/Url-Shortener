@@ -38,7 +38,11 @@ export async function POST(request) {
     shortCode: shortCode,
     createdAt: new Date(),
     expiresAt: expiresAt,
+    userId: session.user.id,
     visits: 0,
+    lastClickedAt: null,
+    clickData: []
+  
   });
 
   return NextResponse.json({ shortUrl });

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "../../../lib/mongodb";
-import { redirect } from "next/dist/server/api-utils";
 
-export default async function ShortUrlRedirect({ params }) {
+export async function GET(request, { params }) {
   const { shortCode } = params;
 
   const client = await clientPromise;
@@ -13,11 +12,24 @@ export default async function ShortUrlRedirect({ params }) {
     .findOne({ shortCode, expiresAt: { $gt: new Date() } });
 
   if (urlEntry) {
-    await db
-      .collection("urls")
-      .updateOne({ _id: urlEntry._id }, { $inc: { visits: 1 } });
-    redirect(urlEntry.originalUrl);
+    const clickData = {
+      timestamp: new Date(),
+      ip: request.headers.get("x-forwarded-for") || "unknown",
+      userAgent: request.headers.get("user-agent"),
+      referer: request.headers.get("referer") || null,
+    };
+
+    await db.collection("urls").updateOne(
+      { _id: urlEntry._id },
+      {
+        $inc: { clicks: 1 },
+        $set: { lastClickedAt: new Date() },
+        $push: { clickData: clickData },
+      }
+    );
+
+    return NextResponse.redirect(urlEntry.originalUrl);
   } else {
-    redirect("/");
+    return NextResponse.redirect("/");
   }
 }

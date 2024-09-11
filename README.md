@@ -50,6 +50,17 @@ npm run dev
 - Use the dashboard to manage your URLs and view analytics
 - Share your shortened URLs with others
 
+## Demo Account
+
+To quickly test the features of our URL shortener:
+
+1. Click on the "Try Demo Account" button on the sign-in page.
+2. You'll be logged in with these credentials:
+   - Email: demo@example.com
+   - Password: demopassword
+
+Note: The demo account has pre-populated data to showcase the application's features.
+
 ## API Routes
 
 - `POST /api/shorten`: Create a new shortened URL

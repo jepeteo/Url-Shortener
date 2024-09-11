@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -19,6 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, BarChart2, QrCode } from "lucide-react";
 import Link from "next/link";
@@ -26,7 +36,13 @@ import Link from "next/link";
 export default function Dashboard() {
   const [urls, setUrls] = useState([]);
   const [showQR, setShowQR] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
   const [sortMethod, setSortMethod] = useState("createdAt");
+  const [activeLinks, setActiveLinks] = useState(0);
+  const [totalClicks, setTotalClicks] = useState(0);
+  const [newUrl, setNewUrl] = useState("");
 
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -37,13 +53,18 @@ export default function Dashboard() {
     } else if (status === "authenticated") {
       fetchUrls();
     }
-  }, [status]);
+  }, [status, currentPage]);
 
   const fetchUrls = async () => {
-    const response = await fetch("/api/urls");
+    const response = await fetch(
+      `/api/urls?page=${currentPage}&limit=${itemsPerPage}`
+    );
     if (response.ok) {
       const data = await response.json();
-      setUrls(data);
+      setUrls(data.urls);
+      setTotalPages(Math.ceil(data.total / itemsPerPage));
+      setActiveLinks(data.activeLinks);
+      setTotalClicks(data.totalClicks);
     }
   };
 
@@ -66,9 +87,69 @@ export default function Dashboard() {
       console.error("Invalid ObjectId");
     }
   };
+
+  const handleAddUrl = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("/api/shorten", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: newUrl }),
+      });
+      if (response.ok) {
+        setNewUrl("");
+        fetchUrls(); // Refresh the URL list
+      } else {
+        // Handle error
+        console.error("Failed to shorten URL");
+      }
+    } catch (error) {
+      console.error("Error adding URL:", error);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Your Shortened URLs</h1>
+      <h1 className="text-2xl font-bold mb-4">Your Dashboard</h1>
+
+      <div className="grid gap-4 md:grid-cols-3 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Links</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeLinks}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalClicks}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Add New URL</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAddUrl} className="space-y-4">
+              <Input
+                type="url"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                placeholder="Enter your URL here"
+                required
+              />
+              <Button type="submit" className="w-full">
+                Shorten URL
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="mb-4">
         <Select
           onValueChange={(value) => setSortMethod(value)}
@@ -146,6 +227,34 @@ export default function Dashboard() {
           ))}
         </TableBody>
       </Table>
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            />
+          </PaginationItem>
+          {[...Array(totalPages)].map((_, i) => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                onClick={() => setCurrentPage(i + 1)}
+                isActive={currentPage === i + 1}
+              >
+                {i + 1}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          <PaginationItem>
+            <PaginationNext
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
       {showQR && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-4 rounded-lg">

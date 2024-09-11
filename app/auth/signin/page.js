@@ -12,6 +12,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -65,6 +66,11 @@ export default function SignIn() {
           <Button onClick={() => signIn("github")} className="w-full">
             Sign in with GitHub
           </Button>
+        </CardFooter>
+        <CardFooter className="flex justify-center">
+          <Link href="/auth/register">
+            <Button variant="link">Don't have an account? Register here</Button>
+          </Link>
         </CardFooter>
       </Card>
     </div>

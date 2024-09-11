@@ -71,6 +71,7 @@ export default function SignIn() {
               signIn("credentials", {
                 email: "demo@example.com",
                 password: "demopassword",
+                callbackUrl: "/dashboard",
               })
             }
             className="w-full"

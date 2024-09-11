@@ -4,6 +4,28 @@ import clientPromise from '../../../../lib/mongodb'
 import { authOptions } from '../../auth/[...nextauth]/route'
 import { ObjectId } from 'mongodb'
 
+export async function GET(request, { params }) {
+  const session = await getServerSession(authOptions)
+
+  if (!session) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+  }
+
+  const client = await clientPromise
+  const db = client.db("urlShortener")
+
+  const url = await db.collection("urls").findOne({
+    _id: new ObjectId(params.id),
+    userId: session.user.id
+  })
+
+  if (!url) {
+    return NextResponse.json({ error: "URL not found or not authorized" }, { status: 404 })
+  }
+
+  return NextResponse.json(url)
+}
+
 export async function DELETE(request, { params }) {
   const session = await getServerSession(authOptions)
 

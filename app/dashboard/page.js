@@ -23,10 +23,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { Trash2, BarChart2 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
+import { Trash2, BarChart2, QrCode } from "lucide-react";
 
 export default function Dashboard() {
   const [urls, setUrls] = useState([]);
+  const [showQR, setShowQR] = useState(null);
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -108,11 +110,33 @@ export default function Dashboard() {
                     <BarChart2 className="h-4 w-4" />
                   </Button>
                 </Link>
+                <Button
+                  onClick={() => setShowQR(url._id)}
+                  variant="ghost"
+                  size="icon"
+                  className="bg-blue-100 hover:bg-blue-200 ml-2"
+                >
+                  <QrCode className="h-4 w-4 text-blue-500" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      {showQR && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-lg">
+            <QRCodeSVG
+              value={`${process.env.NEXT_PUBLIC_BASE_URL}/${
+                urls.find((u) => u._id === showQR).shortCode
+              }`}
+            />
+            <Button onClick={() => setShowQR(null)} className="w-full mt-4">
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

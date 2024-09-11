@@ -27,13 +27,18 @@ export async function POST(request) {
   const client = await clientPromise;
   const db = client.db("urlShortener");
 
-  const shortCode = nanoid(6); // Generate a short, unique ID
+  const shortCode = nanoid(6); 
   const shortUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/${shortCode}`;
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 14);
 
   await db.collection("urls").insertOne({
     originalUrl: url,
     shortCode: shortCode,
     createdAt: new Date(),
+    expiresAt: expiresAt,
+    visits: 0,
   });
 
   return NextResponse.json({ shortUrl });

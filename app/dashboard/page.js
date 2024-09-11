@@ -55,64 +55,50 @@ export default function Dashboard() {
       console.error("Invalid ObjectId");
     }
   };
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-3xl">Your Shortened URLs</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-between items-center mb-6">
-            <Link href="/">
-              <Button variant="outline">Back to Home</Button>
-            </Link>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Original URL</TableHead>
-                <TableHead>Short URL</TableHead>
-                <TableHead>Clicks</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead>Expires At</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {urls.map((url) => (
-                <TableRow key={url._id}>
-                  <TableCell>{url.originalUrl}</TableCell>
-                  <TableCell>
-                    <a
-                      href={`${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {`${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`}
-                    </a>
-                  </TableCell>
-                  <TableCell>{url.visits}</TableCell>
-                  <TableCell>
-                    {new Date(url.createdAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(url.expiresAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      onClick={() => handleRemove(url._id)}
-                      variant="destructive"
-                    >
-                      Remove
+    return (
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-4">Your Shortened URLs</h1>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Original URL</TableHead>
+              <TableHead>Short URL</TableHead>
+              <TableHead>Clicks</TableHead>
+              <TableHead>Created At</TableHead>
+              <TableHead>Last Clicked</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {urls.map((url) => (
+              <TableRow key={url._id}>
+                <TableCell>{url.originalUrl}</TableCell>
+                <TableCell>
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {`${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`}
+                  </a>
+                </TableCell>
+                <TableCell>{url.clicks}</TableCell>
+                <TableCell>{new Date(url.createdAt).toLocaleString()}</TableCell>
+                <TableCell>{url.lastClickedAt ? new Date(url.lastClickedAt).toLocaleString() : 'N/A'}</TableCell>
+                <TableCell>
+                  <Button onClick={() => handleRemove(url._id)} variant="destructive">
+                    Delete
+                  </Button>
+                  <Link href={`/analytics/${url._id}`}>
+                    <Button variant="outline" className="ml-2">
+                      View Analytics
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }

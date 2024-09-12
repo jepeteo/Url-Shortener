@@ -35,6 +35,7 @@ import { InfoIcon } from "lucide-react";
 import { LogOut } from "lucide-react";
 import { Trash2, BarChart2, QrCode } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { QRCodeSVG } from "qrcode.react";
 
 import Link from "next/link";
 

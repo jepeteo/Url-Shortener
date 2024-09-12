@@ -11,7 +11,7 @@ export default function BuyMeACoffee() {
       <img
         src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png"
         alt="Buy Me A Coffee"
-        style={{ height: "40px", width: "145px" }}
+        style={{ height: "36px", width: "131px" }}
       />
     </a>
   );

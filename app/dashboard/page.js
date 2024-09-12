@@ -114,7 +114,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <main className="container mx-auto p-4">
       {session?.user?.email === "demo@example.com" && (
         <Alert className="mb-4 bg-red-50">
           <InfoIcon className="h-4 w-4" />
@@ -290,6 +290,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

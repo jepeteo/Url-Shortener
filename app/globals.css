@@ -83,6 +83,9 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground flex min-h-screen flex-col;
+  }
+  main {
+    @apply flex-1;
   }
 }

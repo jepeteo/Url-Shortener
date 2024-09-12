@@ -189,20 +189,27 @@ export default function Dashboard() {
 
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="hidden md:table-row">
             <TableHead>Original URL</TableHead>
             <TableHead>Short URL</TableHead>
             <TableHead>Clicks</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Last Clicked</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedUrls.map((url) => (
-            <TableRow key={url._id}>
-              <TableCell>{url.originalUrl}</TableCell>
+            <TableRow
+              key={url._id}
+              className="flex flex-col gap md:gap-4 md:table-row"
+            >
               <TableCell>
+                <span className="md:hidden">URL: </span>
+                {url.originalUrl}
+              </TableCell>
+              <TableCell>
+                <span className="md:hidden">Short URL: </span>
                 <a
                   href={`${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`}
                   target="_blank"
@@ -211,14 +218,21 @@ export default function Dashboard() {
                   {`${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`}
                 </a>
               </TableCell>
-              <TableCell>{url.clicks}</TableCell>
-              <TableCell>{new Date(url.createdAt).toLocaleString()}</TableCell>
               <TableCell>
+                <span className="md:hidden">Clicks: </span>
+                {url.clicks}
+              </TableCell>
+              <TableCell>
+                <span className="md:hidden">Created: </span>
+                {new Date(url.createdAt).toLocaleString()}
+              </TableCell>
+              <TableCell>
+                <span className="md:hidden">Expires: </span>
                 {url.lastClickedAt
                   ? new Date(url.lastClickedAt).toLocaleString()
                   : "N/A"}
               </TableCell>
-              <TableCell>
+              <TableCell className="flex items-center md:justify-end">
                 <Button
                   onClick={() => handleRemove(url._id)}
                   variant="ghost"

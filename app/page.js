@@ -45,7 +45,7 @@ export default function Home() {
   const { data: session } = useSession();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-4xl font-bold text-center">
@@ -99,6 +99,9 @@ export default function Home() {
             </>
           )}
         </CardFooter>
+        <div className="mt-[-40px] text-right italic text-sm p-4">
+          by Theodoros Mentis
+        </div>
       </Card>
     </main>
   );

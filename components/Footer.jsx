@@ -61,7 +61,7 @@ export function Footer() {
           <BuyMeACoffee />
         </div>
         <div className="flex items-center space-x-1 text-sm">
-          <span>Made with Next.js</span>
+          <span className="hidden lg:inline-flex">Made with Next.js</span>
           <Button
             variant="ghost"
             size="icon"
@@ -76,7 +76,7 @@ export function Footer() {
               <RiNextjsFill className="h-4 w-4" />
             </a>
           </Button>
-          <span>& Tailwind CSS</span>
+          <span className="hidden lg:inline-flex">& Tailwind CSS</span>
           <Button
             variant="ghost"
             size="icon"

@@ -32,7 +32,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Trash2, BarChart2, QrCode } from "lucide-react";
+import { signOut } from "next-auth/react";
+
 import Link from "next/link";
 
 export default function Dashboard() {
@@ -123,7 +126,12 @@ export default function Dashboard() {
         </Alert>
       )}
 
-      <h1 className="text-2xl font-bold mb-4">Your Dashboard</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Your Dashboard</h1>
+        <Button onClick={() => signOut({ callbackUrl: "/" })}>
+          <LogOut className="mr-2 h-4 w-4" /> Sign Out
+        </Button>{" "}
+      </div>
 
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <Card>

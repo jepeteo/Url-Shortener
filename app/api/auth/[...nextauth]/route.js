@@ -1,8 +1,8 @@
-import NextAuth from "next-auth"
-import GithubProvider from "next-auth/providers/github"
-import CredentialsProvider from "next-auth/providers/credentials"
-import clientPromise from "../../../../lib/mongodb"
-import { compare } from "bcryptjs"
+import NextAuth from "next-auth";
+import GithubProvider from "next-auth/providers/github";
+import CredentialsProvider from "next-auth/providers/credentials";
+import clientPromise from "../../../../lib/mongodb";
+import { compare } from "bcryptjs";
 
 export const authOptions = {
   providers: [
@@ -13,26 +13,47 @@ export const authOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text", placeholder: "jsmith@example.com" },
-        password: { label: "Password", type: "password" }
+        email: {
+          label: "Email",
+          type: "text",
+          placeholder: "jsmith@example.com",
+        },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const client = await clientPromise
-        const usersCollection = client.db("urlShortener").collection("users")
-        
-        const user = await usersCollection.findOne({ email: credentials.email })
-        if (user && await compare(credentials.password, user.password)) {
-          return { id: user._id, name: user.name, email: user.email }
+        const client = await clientPromise;
+        const usersCollection = client.db("urlShortener").collection("users");
+
+        const user = await usersCollection.findOne({
+          email: credentials.email,
+        });
+        if (user && (await compare(credentials.password, user.password))) {
+          return { id: user._id, name: user.name, email: user.email };
         }
-        return null
-      }
-    })
+        return null;
+      },
+    }),
   ],
+  callbacks: {
+    async session({ session, token }) {
+      if (session?.user) {
+        session.user.id = token.sub;
+      }
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
+  },
+
   pages: {
-    signIn: '/auth/signin',
-  }
-}
+    signIn: "/auth/signin",
+  },
+};
 
-const handler = NextAuth(authOptions)
+const handler = NextAuth(authOptions);
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST };

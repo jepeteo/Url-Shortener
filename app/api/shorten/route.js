@@ -5,8 +5,6 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 
-
-
 function isValidUrl(url) {
   try {
     new URL(url);
@@ -18,7 +16,6 @@ function isValidUrl(url) {
 
 export async function POST(request) {
   const session = await getServerSession(authOptions);
-  
   if (!session) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
@@ -29,7 +26,6 @@ export async function POST(request) {
   }
 
   const { url } = await request.json();
-
   if (!isValidUrl(url)) {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
@@ -37,7 +33,7 @@ export async function POST(request) {
   const client = await clientPromise;
   const db = client.db("urlShortener");
 
-  const shortCode = nanoid(6); 
+  const shortCode = nanoid(6);
   const shortUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/${shortCode}`;
 
   const expiresAt = new Date();
@@ -51,7 +47,7 @@ export async function POST(request) {
     userId: session.user.id,
     clicks: 0,
     lastClickedAt: null,
-    clickData: []
+    clickData: [],
   });
 
   return NextResponse.json({ shortUrl });

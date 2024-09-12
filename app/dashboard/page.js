@@ -63,7 +63,7 @@ export default function Dashboard() {
 
   const fetchUrls = async () => {
     const response = await fetch(
-      `/api/urls?page=${currentPage}&limit=${itemsPerPage}`
+      `/api/urls?page=${currentPage}&limit=${itemsPerPage}&userId=${session.user.id}`
     );
     if (response.ok) {
       const data = await response.json();

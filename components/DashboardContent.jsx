@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash2, BarChart2, QrCode } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Trash2, BarChart2, QrCode, InfoIcon } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Link from "next/link";
 
@@ -55,6 +56,7 @@ export default function DashboardContent({
   const [showQR, setShowQR] = useState(null);
   const [sortMethod, setSortMethod] = useState("createdAt");
   const [newUrl, setNewUrl] = useState("");
+  const [formStatus, setFormStatus] = useState("");
 
   // Debounce the setNewUrl function
   const debouncedSetNewUrl = useCallback(
@@ -67,6 +69,7 @@ export default function DashboardContent({
 
   const handleAddUrl = async (e) => {
     e.preventDefault();
+    setFormStatus("Submitting...");
     try {
       const response = await fetch("/api/shorten", {
         method: "POST",
@@ -75,12 +78,17 @@ export default function DashboardContent({
       });
       if (response.ok) {
         setNewUrl("");
-        fetchUrls(); // Refresh the URL list
-      } else {
-        // Handle error
-        console.error("Failed to shorten URL");
+        fetchUrls();
+        setFormStatus({
+          type: "success",
+          message: "URL successfully shortened!",
+        });
       }
     } catch (error) {
+      setFormStatus({
+        type: "error",
+        message: "Error shortening URL. Please try again.",
+      });
       console.error("Error adding URL:", error);
     }
   };
@@ -127,6 +135,13 @@ export default function DashboardContent({
               <Button type="submit" className="w-full">
                 Shorten URL
               </Button>
+              {formStatus.message && (
+                <Alert variant={formStatus.type}>
+                  <InfoIcon className="h-4 w-4" />
+                  <AlertTitle>Status</AlertTitle>
+                  <AlertDescription>{formStatus.message}</AlertDescription>
+                </Alert>
+              )}
             </form>
           </CardContent>
         </Card>
@@ -136,6 +151,7 @@ export default function DashboardContent({
         <Select
           onValueChange={(value) => setSortMethod(value)}
           defaultValue="createdAt"
+          aria-label="Sort URLs by"
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />

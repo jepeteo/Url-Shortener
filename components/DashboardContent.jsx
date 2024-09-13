@@ -122,6 +122,7 @@ export default function DashboardContent({
                 onChange={handleInputChange}
                 placeholder="Enter your URL here"
                 required
+                aria-label="Enter URL to shorten"
               />
               <Button type="submit" className="w-full">
                 Shorten URL
@@ -197,7 +198,8 @@ export default function DashboardContent({
                   onClick={() => handleRemove(url._id)}
                   variant="ghost"
                   size="icon"
-                  className="bg-red-100 hover:bg-red-200"
+                  className="bg-red-200 hover:bg-red-300 text-red-800"
+                  aria-label={`Delete URL ${url.shortCode}`}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -206,6 +208,7 @@ export default function DashboardContent({
                     variant="ghost"
                     size="icon"
                     className="bg-green-100 hover:bg-green-200 ml-2"
+                    aria-label={`View analytics for URL ${url.shortCode}`}
                   >
                     <BarChart2 className="h-4 w-4" />
                   </Button>
@@ -215,6 +218,7 @@ export default function DashboardContent({
                   variant="ghost"
                   size="icon"
                   className="bg-blue-100 hover:bg-blue-200 ml-2"
+                  aria-label={`View QR code for URL ${url.shortCode}`}
                 >
                   <QrCode className="h-4 w-4 text-blue-500" />
                 </Button>

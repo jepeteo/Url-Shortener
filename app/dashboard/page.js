@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export default function Dashboard() {
     }
   }, [status, currentPage]);
 
-  const fetchUrls = async () => {
+  const fetchUrls = useCallback(async () => {
     const response = await fetch(
       `/api/urls?page=${currentPage}&limit=${itemsPerPage}&userId=${session.user.id}`
     );
@@ -47,7 +47,7 @@ export default function Dashboard() {
       setActiveLinks(data.activeLinks);
       setTotalClicks(data.totalClicks);
     }
-  };
+  }, [currentPage, itemsPerPage, session?.user?.id]);
 
   return (
     <main className="container mx-auto p-4">
@@ -67,17 +67,18 @@ export default function Dashboard() {
           <LogOut className="mr-2 h-4 w-4" /> Sign Out
         </Button>{" "}
       </div>
-      console.log(urls)
-      <DashboardContent
-        urls={urls}
-        setUrls={setUrls}
-        totalClicks={totalClicks}
-        activeLinks={activeLinks}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        totalPages={totalPages}
-        fetchUrls={fetchUrls}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <DashboardContent
+          urls={urls}
+          setUrls={setUrls}
+          totalClicks={totalClicks}
+          activeLinks={activeLinks}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={totalPages}
+          fetchUrls={fetchUrls}
+        />
+      </Suspense>
     </main>
   );
 }

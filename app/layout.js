@@ -14,7 +14,12 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="flex flex-col min-h-screen">
-        <Providers>{children}</Providers>
+        <a href="#main-content" className="sr-only focus:not-sr-only">
+          Skip to main content
+        </a>
+        <Providers>
+          <main id="main-content">{children}</main>
+        </Providers>
         <Footer />
       </body>
     </html>

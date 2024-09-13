@@ -67,7 +67,7 @@ export default function Dashboard() {
   }, [currentPage, itemsPerPage, session?.user?.id]);
 
   return (
-    <main className="container mx-auto p-4">
+    <div className="container mx-auto p-4">
       {session?.user?.email === "demo@example.com" && (
         <Alert className="mb-4 bg-red-50">
           <InfoIcon className="h-4 w-4" />
@@ -96,6 +96,6 @@ export default function Dashboard() {
           fetchUrls={fetchUrls}
         />
       </Suspense>
-    </main>
+    </div>
   );
 }

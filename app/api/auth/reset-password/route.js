@@ -25,7 +25,6 @@ export async function POST(request) {
 
     if (result.matchedCount > 0) {
       const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password/${resetToken}`;
-      console.log("Reset URL:", resetUrl);
 
       return NextResponse.json({
         message: "Password reset link sent to email",
@@ -37,7 +36,6 @@ export async function POST(request) {
       );
     }
   } catch (error) {
-    console.error("Reset password error:", error);
     return NextResponse.json({ error: "An error occurred" }, { status: 500 });
   }
 }

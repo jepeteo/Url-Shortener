@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import clientPromise from "../../../lib/mongodb";
 
 export async function GET(request, { params }) {
-  console.log("Handling GET request for shortCode:", params.shortCode);
-
   const { shortCode } = params;
 
   try {
@@ -15,8 +13,6 @@ export async function GET(request, { params }) {
       .findOne({ shortCode, expiresAt: { $gt: new Date() } });
 
     if (urlEntry) {
-      console.log("URL entry found:", urlEntry.originalUrl);
-
       const clickData = {
         timestamp: new Date(),
         ip: request.headers.get("x-forwarded-for") || "unknown",
@@ -33,14 +29,11 @@ export async function GET(request, { params }) {
         }
       );
 
-      console.log("Redirecting to:", urlEntry.originalUrl);
       return NextResponse.redirect(urlEntry.originalUrl);
     } else {
-      console.log("URL not found or expired");
       return NextResponse.redirect("/"); // Redirect to home page if URL not found or expired
     }
   } catch (error) {
-    console.error("Error handling shortened URL:", error);
     return NextResponse.redirect("/error"); // Redirect to an error page
   }
 }

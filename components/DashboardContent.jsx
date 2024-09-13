@@ -1,4 +1,4 @@
-import React, { useState, memo, useCallback } from "react";
+import React, { useState, memo, useCallback, useMemo } from "react";
 import { debounce } from "lodash";
 import {
   Table,
@@ -7,6 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableCaption,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import {
@@ -67,51 +68,63 @@ export default function DashboardContent({
     debouncedSetNewUrl(e.target.value);
   };
 
-  const handleAddUrl = async (e) => {
-    e.preventDefault();
-    setFormStatus("Submitting...");
-    try {
-      const response = await fetch("/api/shorten", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: newUrl }),
-      });
-      if (response.ok) {
-        setNewUrl("");
-        fetchUrls();
-        setFormStatus({
-          type: "success",
-          message: "URL successfully shortened!",
+  const handleAddUrl = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setFormStatus("Submitting...");
+      try {
+        const response = await fetch("/api/shorten", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: newUrl }),
         });
+        if (response.ok) {
+          setNewUrl("");
+          fetchUrls();
+          setFormStatus({
+            type: "success",
+            message: "URL successfully shortened!",
+          });
+        }
+      } catch (error) {
+        setFormStatus({
+          type: "error",
+          message: "Error shortening URL. Please try again.",
+        });
+        console.error("Error adding URL:", error);
       }
-    } catch (error) {
-      setFormStatus({
-        type: "error",
-        message: "Error shortening URL. Please try again.",
-      });
-      console.error("Error adding URL:", error);
-    }
-  };
+    },
+    [newUrl, fetchUrls]
+  );
 
-  const handleRemove = async (id) => {
-    if (id && id.length === 24) {
-      const response = await fetch(`/api/urls/${id}`, { method: "DELETE" });
-      if (response.ok) {
-        setUrls(urls.filter((url) => url._id !== id));
+  const handleRemove = useCallback(
+    async (id) => {
+      if (id && id.length === 24) {
+        const response = await fetch(`/api/urls/${id}`, { method: "DELETE" });
+        if (response.ok) {
+          setUrls(urls.filter((url) => url._id !== id));
+        }
+      } else {
+        console.error("Invalid ObjectId");
       }
-    } else {
-      console.error("Invalid ObjectId");
-    }
-  };
+    },
+    [urls, setUrls]
+  );
 
-  const sortedUrls = [...urls].sort((a, b) => {
-    if (sortMethod === "clicks") {
-      return b.clicks - a.clicks;
-    } else if (sortMethod === "createdAt") {
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    }
-    return 0;
-  });
+  const QRCodeDisplay = memo(({ url }) => (
+    <QRCodeSVG value={`${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`} />
+  ));
+
+  const sortedUrls = useMemo(() => {
+    return [...urls].sort((a, b) => {
+      if (sortMethod === "clicks") {
+        return b.clicks - a.clicks;
+      } else if (sortMethod === "createdAt") {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      return 0;
+    });
+  }, [urls, sortMethod]);
 
   return (
     <>
@@ -163,7 +176,8 @@ export default function DashboardContent({
         </Select>
       </div>
 
-      <Table>
+      <Table aria-label="Shortened URLs">
+        <TableCaption>List of your shortened URLs</TableCaption>
         <TableHeader>
           <TableRow className="hidden md:table-row">
             <TableHead>Original URL</TableHead>
@@ -286,8 +300,17 @@ export default function DashboardContent({
         </Pagination>
       </nav>
       {showQR && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="qrCodeModalTitle"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+        >
           <div className="bg-white p-4 rounded-lg">
+            <h2 id="qrCodeModalTitle" className="sr-only">
+              QR Code for Shortened URL
+            </h2>
+
             <QRCodeSVG
               value={`${process.env.NEXT_PUBLIC_BASE_URL}/${
                 urls.find((u) => u._id === showQR).shortCode

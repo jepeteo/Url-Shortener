@@ -2,12 +2,25 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Footer } from "@/components/Footer";
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "URL Shortener - Mentis T.",
-  description:
-    "A url shortener built with Next.js and MongoDB by Theodororos Mentis.",
+  title: 'URL Shortener - Mentis T.',
+  description: 'A url shortener built with Next.js and MongoDB by Theodororos Mentis.',
+  openGraph: {
+    title: 'URL Shortener - Mentis T.',
+    description: 'A url shortener built with Next.js and MongoDB by Theodororos Mentis.',
+    url: 'https://your-url-shortener.com',
+    siteName: 'URL Shortener',
+    images: [
+      {
+        url: 'https://your-url-shortener.com/og-image.jpg',
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({ children }) {

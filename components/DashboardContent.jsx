@@ -33,6 +33,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Trash2, BarChart2, QrCode, InfoIcon } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Link from "next/link";
+import DOMPurify from "isomorphic-dompurify";
 
 const MemoizedCard = memo(({ title, content }) => (
   <Card>
@@ -65,6 +66,18 @@ export default function DashboardContent({
   const addUrlMutation = useMutation(addUrl, {
     onSuccess: () => {
       queryClient.invalidateQueries("urls");
+      setNewUrl("");
+      setFormStatus({
+        type: "success",
+        message: "URL successfully shortened!",
+      });
+    },
+    onError: (error) => {
+      setFormStatus({
+        type: "error",
+        message: "Error shortening URL. Please try again.",
+      });
+      console.error("Error adding URL:", error);
     },
   });
   const removeUrlMutation = useMutation(removeUrl, {
@@ -72,6 +85,16 @@ export default function DashboardContent({
       queryClient.invalidateQueries("urls");
     },
   });
+
+  const handleAddUrl = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const sanitizedUrl = DOMPurify.sanitize(newUrl);
+      addUrlMutation.mutate(sanitizedUrl);
+      setNewUrl("");
+    },
+    [newUrl, addUrlMutation]
+  );
 
   // Debounce the setNewUrl function
   const debouncedSetNewUrl = useCallback(
@@ -82,15 +105,6 @@ export default function DashboardContent({
   const handleInputChange = (e) => {
     debouncedSetNewUrl(e.target.value);
   };
-
-  const handleAddUrl = useCallback(
-    async (e) => {
-      e.preventDefault();
-      addUrlMutation.mutate(newUrl);
-      setNewUrl("");
-    },
-    [newUrl, addUrlMutation]
-  );
 
   const handleRemove = useCallback(
     (id) => {
@@ -185,13 +199,13 @@ export default function DashboardContent({
             >
               <TableCell>
                 <a
-                  href={url.originalUrl}
+                  href={DOMPurify.sanitize(url.originalUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   tabIndex={0}
                 >
                   <span className="md:hidden font-bold">URL: </span>
-                  {url.originalUrl}
+                  {DOMPurify.sanitize(url.originalUrl)}
                 </a>
               </TableCell>
               <TableCell>

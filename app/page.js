@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import React, { useState, memo } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import Link from "next/link";
+
+const MemoizedCard = memo(Card);
 
 export default function Home() {
   const [url, setUrl] = useState("");
@@ -46,7 +48,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24">
-      <Card className="w-full max-w-md">
+      <MemoizedCard className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-4xl font-bold text-center">
             URL Shortener
@@ -102,7 +104,7 @@ export default function Home() {
         <div className="mt-[-40px] text-right italic text-sm p-4">
           by Theodoros Mentis
         </div>
-      </Card>
+      </MemoizedCard>
     </main>
   );
 }

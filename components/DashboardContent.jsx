@@ -45,6 +45,7 @@ const MemoizedCard = memo(({ title, content }) => (
     </CardContent>
   </Card>
 ));
+MemoizedCard.displayName = "MemoizedCard";
 
 export default function DashboardContent({
   urls,
@@ -96,15 +97,20 @@ export default function DashboardContent({
     [newUrl, addUrlMutation]
   );
 
-  // Debounce the setNewUrl function
   const debouncedSetNewUrl = useCallback(
-    debounce((value) => setNewUrl(value), 100),
-    []
+    (value) => {
+      const debouncedFunc = debounce((val) => setNewUrl(val), 100);
+      debouncedFunc(value);
+    },
+    [setNewUrl]
   );
 
-  const handleInputChange = (e) => {
-    debouncedSetNewUrl(e.target.value);
-  };
+  const handleInputChange = useCallback(
+    (e) => {
+      debouncedSetNewUrl(e.target.value);
+    },
+    [debouncedSetNewUrl]
+  );
 
   const handleRemove = useCallback(
     (id) => {
@@ -116,6 +122,7 @@ export default function DashboardContent({
   const QRCodeDisplay = memo(({ url }) => (
     <QRCodeSVG value={`${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`} />
   ));
+  QRCodeDisplay.displayName = "QRCodeDisplay";
 
   const sortedUrls = useMemo(() => {
     return [...urls].sort((a, b) => {

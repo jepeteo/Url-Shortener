@@ -1,35 +1,39 @@
-  'use client'
+"use client";
 
-  import { useState, useEffect } from 'react'
-  import { useSession } from 'next-auth/react'
-  import { useRouter } from 'next/navigation'
-  import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-  import { Button } from "@/components/ui/button"
-  import Link from 'next/link'
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-  export default function UrlAnalytics({ params }) {
-    const [analytics, setAnalytics] = useState(null)
-    const { data: session, status } = useSession()
-    const router = useRouter()
-    const { id } = params
+export default function UrlAnalytics({ params }) {
+  const [analytics, setAnalytics] = useState(null);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { id } = params;
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin')
-    } else if (status === 'authenticated') {
-      fetchAnalytics()
-    }
-  }, [status])
+    if (!session) {
+      router.push("/auth/signin");
+    } else {
+      const fetchAnalytics = async () => {
+        try {
+          const response = await fetch(`/api/analytics/${id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setAnalytics(data);
+          }
+        } catch (error) {
+          console.error("Error fetching analytics:", error);
+        }
+      };
 
-  const fetchAnalytics = async () => {
-    const response = await fetch(`/api/urls/${id}`)
-    if (response.ok) {
-      const data = await response.json()
-      setAnalytics(data)
+      fetchAnalytics();
     }
-  }
+  }, [session, router, id]);
 
-  if (!analytics) return <div>Loading...</div>
+  if (!analytics) return <div>Loading...</div>;
 
   return (
     <div className="container mx-auto p-4">
@@ -44,11 +48,26 @@
           <CardTitle>Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <p><strong>Original URL:</strong> {analytics.originalUrl}</p>
-          <p><strong>Short URL:</strong> {`${process.env.NEXT_PUBLIC_BASE_URL}/${analytics.shortCode}`}</p>
-          <p><strong>Total Clicks:</strong> {analytics.clicks}</p>
-          <p><strong>Created At:</strong> {new Date(analytics.createdAt).toLocaleString()}</p>
-          <p><strong>Last Clicked:</strong> {analytics.lastClickedAt ? new Date(analytics.lastClickedAt).toLocaleString() : 'N/A'}</p>
+          <p>
+            <strong>Original URL:</strong> {analytics.originalUrl}
+          </p>
+          <p>
+            <strong>Short URL:</strong>{" "}
+            {`${process.env.NEXT_PUBLIC_BASE_URL}/${analytics.shortCode}`}
+          </p>
+          <p>
+            <strong>Total Clicks:</strong> {analytics.clicks}
+          </p>
+          <p>
+            <strong>Created At:</strong>{" "}
+            {new Date(analytics.createdAt).toLocaleString()}
+          </p>
+          <p>
+            <strong>Last Clicked:</strong>{" "}
+            {analytics.lastClickedAt
+              ? new Date(analytics.lastClickedAt).toLocaleString()
+              : "N/A"}
+          </p>
         </CardContent>
       </Card>
       <Card className="mb-4">
@@ -60,7 +79,8 @@
             <ul>
               {analytics.clickData.map((click, index) => (
                 <li key={index}>
-                  {new Date(click.timestamp).toLocaleString()} - IP: {click.ip}, User Agent: {click.userAgent}
+                  {new Date(click.timestamp).toLocaleString()} - IP: {click.ip},
+                  User Agent: {click.userAgent}
                 </li>
               ))}
             </ul>
@@ -70,5 +90,5 @@
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

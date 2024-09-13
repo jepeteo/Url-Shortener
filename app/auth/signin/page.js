@@ -82,7 +82,9 @@ export default function SignIn() {
 
         <CardFooter className="flex justify-center">
           <Link href="/auth/register">
-            <Button variant="link">Don't have an account? Register here</Button>
+            <Button variant="link">
+              Don&apos;t have an account? Register here
+            </Button>
           </Link>
         </CardFooter>
         <div className="text-sm text-center pb-4">

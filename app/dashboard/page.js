@@ -28,14 +28,6 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    } else if (status === "authenticated") {
-      fetchUrls();
-    }
-  }, [status, currentPage]);
-
   const fetchUrls = useCallback(async () => {
     const cacheKey = `urls-${currentPage}-${itemsPerPage}-${session?.user?.id}`;
     const cache = await caches.open("url-shortener-cache");
@@ -65,6 +57,14 @@ export default function Dashboard() {
       cache.put(cacheKey, new Response(JSON.stringify(data)));
     }
   }, [currentPage, itemsPerPage, session?.user?.id]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
+    } else if (status === "authenticated") {
+      fetchUrls();
+    }
+  }, [status, currentPage, router, fetchUrls]);
 
   return (
     <div className="container mx-auto p-4">

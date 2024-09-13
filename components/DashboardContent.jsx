@@ -182,8 +182,15 @@ export default function DashboardContent({
               md:table-row md:gap-4 md:shadow-none md:border-none md:p-0"
             >
               <TableCell>
-                <span className="md:hidden font-bold">URL: </span>
-                {url.originalUrl}
+                <a
+                  href={url.originalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  tabIndex={0}
+                >
+                  <span className="md:hidden font-bold">URL: </span>
+                  {url.originalUrl}
+                </a>
               </TableCell>
               <TableCell>
                 <span className="md:hidden font-bold">Short URL: </span>
@@ -216,10 +223,11 @@ export default function DashboardContent({
                   size="icon"
                   className="bg-red-200 hover:bg-red-300 text-red-800"
                   aria-label={`Delete URL ${url.shortCode}`}
+                  tabIndex={0}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
-                <Link href={`/analytics/${url._id}`}>
+                <Link href={`/analytics/${url._id}`} tabIndex="-1">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -235,6 +243,7 @@ export default function DashboardContent({
                   size="icon"
                   className="bg-blue-100 hover:bg-blue-200 ml-2"
                   aria-label={`View QR code for URL ${url.shortCode}`}
+                  tabIndex={0}
                 >
                   <QrCode className="h-4 w-4 text-blue-500" />
                 </Button>

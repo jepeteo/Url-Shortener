@@ -1,4 +1,5 @@
 import React, { useState, memo, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "react-query";
 import { debounce } from "lodash";
 import {
   Table,
@@ -54,16 +55,30 @@ export default function DashboardContent({
   totalPages,
   fetchUrls,
 }) {
+  const queryClient = useQueryClient();
   const [showQR, setShowQR] = useState(null);
   const [sortMethod, setSortMethod] = useState("createdAt");
   const [newUrl, setNewUrl] = useState("");
   const [formStatus, setFormStatus] = useState("");
+
+  const { data: urlsData, isLoading, error } = useQuery("urls", fetchUrls);
+  const addUrlMutation = useMutation(addUrl, {
+    onSuccess: () => {
+      queryClient.invalidateQueries("urls");
+    },
+  });
+  const removeUrlMutation = useMutation(removeUrl, {
+    onSuccess: () => {
+      queryClient.invalidateQueries("urls");
+    },
+  });
 
   // Debounce the setNewUrl function
   const debouncedSetNewUrl = useCallback(
     debounce((value) => setNewUrl(value), 100),
     []
   );
+
   const handleInputChange = (e) => {
     debouncedSetNewUrl(e.target.value);
   };
@@ -71,44 +86,17 @@ export default function DashboardContent({
   const handleAddUrl = useCallback(
     async (e) => {
       e.preventDefault();
-      setFormStatus("Submitting...");
-      try {
-        const response = await fetch("/api/shorten", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: newUrl }),
-        });
-        if (response.ok) {
-          setNewUrl("");
-          fetchUrls();
-          setFormStatus({
-            type: "success",
-            message: "URL successfully shortened!",
-          });
-        }
-      } catch (error) {
-        setFormStatus({
-          type: "error",
-          message: "Error shortening URL. Please try again.",
-        });
-        console.error("Error adding URL:", error);
-      }
+      addUrlMutation.mutate(newUrl);
+      setNewUrl("");
     },
-    [newUrl, fetchUrls]
+    [newUrl, addUrlMutation]
   );
 
   const handleRemove = useCallback(
-    async (id) => {
-      if (id && id.length === 24) {
-        const response = await fetch(`/api/urls/${id}`, { method: "DELETE" });
-        if (response.ok) {
-          setUrls(urls.filter((url) => url._id !== id));
-        }
-      } else {
-        console.error("Invalid ObjectId");
-      }
+    (id) => {
+      removeUrlMutation.mutate(id);
     },
-    [urls, setUrls]
+    [removeUrlMutation]
   );
 
   const QRCodeDisplay = memo(({ url }) => (
@@ -324,4 +312,26 @@ export default function DashboardContent({
       )}
     </>
   );
+}
+
+async function fetchUrls() {
+  const response = await fetch("/api/urls");
+  if (!response.ok) throw new Error("Failed to fetch URLs");
+  return response.json();
+}
+
+async function addUrl(url) {
+  const response = await fetch("/api/shorten", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  if (!response.ok) throw new Error("Failed to shorten URL");
+  return response.json();
+}
+
+async function removeUrl(id) {
+  const response = await fetch(`/api/urls/${id}`, { method: "DELETE" });
+  if (!response.ok) throw new Error("Failed to delete URL");
+  return response.json();
 }

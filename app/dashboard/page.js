@@ -202,14 +202,15 @@ export default function Dashboard() {
           {sortedUrls.map((url) => (
             <TableRow
               key={url._id}
-              className="flex flex-col gap md:gap-4 md:table-row"
+              className="flex flex-col my-4 rounded-xl border bg-card text-card-foreground shadow p-6 
+                          md:table-row md:gap-4 md:shadow-none md:border-none md:p-0"
             >
               <TableCell>
-                <span className="md:hidden">URL: </span>
+                <span className="md:hidden font-bold">URL: </span>
                 {url.originalUrl}
               </TableCell>
               <TableCell>
-                <span className="md:hidden">Short URL: </span>
+                <span className="md:hidden font-bold">Short URL: </span>
                 <a
                   href={`${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`}
                   target="_blank"
@@ -219,15 +220,15 @@ export default function Dashboard() {
                 </a>
               </TableCell>
               <TableCell>
-                <span className="md:hidden">Clicks: </span>
+                <span className="md:hidden font-bold">Clicks: </span>
                 {url.clicks}
               </TableCell>
               <TableCell>
-                <span className="md:hidden">Created: </span>
+                <span className="md:hidden font-bold">Created: </span>
                 {new Date(url.createdAt).toLocaleString()}
               </TableCell>
               <TableCell>
-                <span className="md:hidden">Expires: </span>
+                <span className="md:hidden font-bold">Expires: </span>
                 {url.lastClickedAt
                   ? new Date(url.lastClickedAt).toLocaleString()
                   : "N/A"}

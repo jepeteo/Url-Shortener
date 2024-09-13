@@ -37,6 +37,20 @@ export default function Dashboard() {
   }, [status, currentPage]);
 
   const fetchUrls = useCallback(async () => {
+    const cacheKey = `urls-${currentPage}-${itemsPerPage}-${session?.user?.id}`;
+    const cache = await caches.open("url-shortener-cache");
+
+    // Try to get the cached response
+    const cachedResponse = await cache.match(cacheKey);
+    if (cachedResponse) {
+      const data = await cachedResponse.json();
+      setUrls(data.urls);
+      setTotalPages(Math.ceil(data.total / itemsPerPage));
+      setActiveLinks(data.activeLinks);
+      setTotalClicks(data.totalClicks);
+    }
+
+    // Fetch fresh data from the API
     const response = await fetch(
       `/api/urls?page=${currentPage}&limit=${itemsPerPage}&userId=${session.user.id}`
     );
@@ -46,6 +60,9 @@ export default function Dashboard() {
       setTotalPages(Math.ceil(data.total / itemsPerPage));
       setActiveLinks(data.activeLinks);
       setTotalClicks(data.totalClicks);
+
+      // Update the cache with the fresh data
+      cache.put(cacheKey, new Response(JSON.stringify(data)));
     }
   }, [currentPage, itemsPerPage, session?.user?.id]);
 

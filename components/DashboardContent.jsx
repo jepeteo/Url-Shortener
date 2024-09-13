@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, memo, useCallback } from "react";
+import { debounce } from "lodash";
 import {
   Table,
   TableBody,
@@ -30,6 +31,17 @@ import { Trash2, BarChart2, QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Link from "next/link";
 
+const MemoizedCard = memo(({ title, content }) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{content}</div>
+    </CardContent>
+  </Card>
+));
+
 export default function DashboardContent({
   urls,
   setUrls,
@@ -43,6 +55,15 @@ export default function DashboardContent({
   const [showQR, setShowQR] = useState(null);
   const [sortMethod, setSortMethod] = useState("createdAt");
   const [newUrl, setNewUrl] = useState("");
+
+  // Debounce the setNewUrl function
+  const debouncedSetNewUrl = useCallback(
+    debounce((value) => setNewUrl(value), 100),
+    []
+  );
+  const handleInputChange = (e) => {
+    debouncedSetNewUrl(e.target.value);
+  };
 
   const handleAddUrl = async (e) => {
     e.preventDefault();
@@ -87,22 +108,8 @@ export default function DashboardContent({
   return (
     <>
       <div className="grid gap-4 md:grid-cols-3 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Links</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeLinks}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalClicks}</div>
-          </CardContent>
-        </Card>
+        <MemoizedCard title="Active Links" content={activeLinks} />
+        <MemoizedCard title="Total Clicks" content={totalClicks} />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Add New URL</CardTitle>
@@ -112,7 +119,7 @@ export default function DashboardContent({
               <Input
                 type="url"
                 value={newUrl}
-                onChange={(e) => setNewUrl(e.target.value)}
+                onChange={handleInputChange}
                 placeholder="Enter your URL here"
                 required
               />

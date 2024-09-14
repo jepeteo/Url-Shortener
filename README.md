@@ -13,7 +13,21 @@ A modern, feature-rich URL shortening service built with Next.js, MongoDB, and S
 - Password reset functionality
 - Rate limiting to prevent abuse
 
-## Getting Started
+## Tech Stack
+
+- Next.js
+- MongoDB
+- NextAuth for authentication
+- Tailwind CSS for styling
+- Shadcn UI components
+
+## Optimization and Accessibility
+
+- Memoization of components for performance optimization
+- Responsive design for mobile and desktop
+- Semantic HTML structure for better accessibility
+- ARIA attributes for improved screen reader support
+- Color contrast considerations in the UI design
 
 ### Prerequisites
 
@@ -36,6 +50,7 @@ Create a `.env.local` file in the root directory and add the following:
 
 MONGODB_URI=your_mongodb_connection_string
 NEXTAUTH_SECRET=your_nextauth_secret
+NEXTAUTH_URL=http://localhost:3000
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 4. Run the development server:
@@ -49,6 +64,13 @@ npm run dev
 - Register or sign in to start creating shortened URLs
 - Use the dashboard to manage your URLs and view analytics
 - Share your shortened URLs with others
+
+## Project Structure
+
+- `app/`: Contains the main application pages and components
+- `components/`: Reusable UI components
+- `lib/`: Utility functions and database connection
+- `public/`: Static assets
 
 ## Demo Account
 

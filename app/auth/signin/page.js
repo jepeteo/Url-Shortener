@@ -34,10 +34,11 @@ export default function SignIn() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
+    <div className="flex flex-col min-h-[64vh] items-center justify-center p-4 md:p-24 md:min-h-[88vh]">
+      <Card className="w-full max-w-md bg-slate-50">
+        <CardHeader className="text-4xl font-bold text-center">
+          <Link href="/">mikrouli.link</Link>
+          <CardTitle className="text-xl font-bold text-center my-2">
             Sign In
           </CardTitle>
         </CardHeader>
@@ -49,6 +50,8 @@ export default function SignIn() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
               required
+              aria-label="Email Address"
+              className="bg-white"
             />
             <Input
               type="password"
@@ -56,14 +59,20 @@ export default function SignIn() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               required
+              aria-label="Password"
+              className="bg-white"
             />
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" aria-label="Sign In">
               Sign In
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center flex-col">
-          <Button onClick={() => signIn("github")} className="w-full mb-2">
+          <Button
+            onClick={() => signIn("github")}
+            className="w-full mb-2"
+            aria-label="Sign In with GitHub"
+          >
             Sign in with GitHub
           </Button>
           <Button
@@ -75,6 +84,7 @@ export default function SignIn() {
               })
             }
             className="w-full"
+            aria-label="Try Demo Account"
           >
             Try Demo Account
           </Button>

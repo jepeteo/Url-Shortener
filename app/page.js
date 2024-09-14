@@ -48,7 +48,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-[64vh] items-center justify-center p-4 md:p-24 md:min-h-[88vh]">
-      <MemoizedCard className="w-full max-w-md bg-slate-100">
+      <MemoizedCard className="w-full max-w-md bg-slate-50">
         <CardHeader className="text-4xl font-bold text-center">
           mikrouli.link
           <CardTitle className="text-xl text-slate-600 my-2">

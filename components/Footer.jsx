@@ -84,7 +84,7 @@ export function Footer() {
             asChild
           >
             <a
-              href="https://nextjs.org/"
+              href="https://tailwindcss.com/"
               target="_blank"
               rel="noopener noreferrer"
             >

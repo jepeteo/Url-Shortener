@@ -47,11 +47,12 @@ export default function Home() {
   const { data: session } = useSession();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24">
-      <MemoizedCard className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-4xl font-bold text-center">
-            URL Shortener
+    <div className="flex flex-col min-h-[64vh] items-center justify-center p-4 md:p-24 md:min-h-[88vh]">
+      <MemoizedCard className="w-full max-w-md bg-slate-100">
+        <CardHeader className="text-4xl font-bold text-center">
+          mikrouli.link
+          <CardTitle className="text-xl text-slate-600 my-2">
+            - - URL Shortener - -
           </CardTitle>
         </CardHeader>
 
@@ -101,10 +102,11 @@ export default function Home() {
             </>
           )}
         </CardFooter>
-        <div className="mt-[-40px] text-right italic text-sm p-4">
+
+        <div className="mt-[-40px] text-right italic text-sm p-4 text-slate-500">
           by Theodoros Mentis
         </div>
       </MemoizedCard>
-    </main>
+    </div>
   );
 }

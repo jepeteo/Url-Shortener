@@ -75,23 +75,6 @@ export const authOptions = {
       }
       return session;
     },
-
-    // async session({ session, token }) {
-    //   if (session?.user) {
-    //     session.user.id = token.sub;
-    //   }
-    //   return session;
-    // },
-    // async jwt({ token, user }) {
-    //   if (user) {
-    //     token.sub = user.id;
-    //   }
-    //   return token;
-    // },
-
-    // async redirect({ url, baseUrl }) {
-    //   return `${baseUrl}/dashboard`;
-    // },
   },
 
   pages: {

@@ -4,22 +4,25 @@ import { Providers } from "./providers";
 import { Footer } from "@/components/Footer";
 
 export const metadata = {
-  title: 'URL Shortener - Mentis T.',
-  description: 'A url shortener built with Next.js and MongoDB by Theodororos Mentis.',
+  title: "URL Shortener - Mentis T.",
+  description:
+    "A url shortener built with Next.js and MongoDB by Theodororos Mentis.",
   openGraph: {
-    title: 'URL Shortener - Mentis T.',
-    description: 'A url shortener built with Next.js and MongoDB by Theodororos Mentis.',
-    url: 'https://your-url-shortener.com',
-    siteName: 'URL Shortener',
+    title: "URL Shortener - Mentis T.",
+    description:
+      "A url shortener built with Next.js and MongoDB by Theodororos Mentis.",
+    url: "https://your-url-shortener.com",
+    siteName: "URL Shortener",
     images: [
       {
-        url: 'https://your-url-shortener.com/og-image.jpg',
+        url: "https://your-url-shortener.com/og-image.jpg",
         width: 1200,
         height: 630,
       },
     ],
-    locale: 'en_US',
-    type: 'website',
+    icons: [{ rel: "icon", url: "/favicon.png", type: "image/png" }],
+    locale: "en_US",
+    type: "website",
   },
 };
 

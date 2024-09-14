@@ -27,7 +27,7 @@ export default function SignIn() {
       password,
     });
     if (result.ok) {
-      router.push("/");
+      router.push("/dashboard");
     } else {
       // Handle error
     }
@@ -69,7 +69,7 @@ export default function SignIn() {
         </CardContent>
         <CardFooter className="flex justify-center flex-col">
           <Button
-            onClick={() => signIn("github")}
+            onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
             className="w-full mb-2"
             aria-label="Sign In with GitHub"
           >

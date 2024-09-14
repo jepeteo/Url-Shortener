@@ -7,10 +7,10 @@ import { Separator } from "@/components/ui/separator";
 export function Footer() {
   return (
     <footer className="border-t">
-      <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-16 md:flex-row md:py-0">
-        <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
+      <div className="container flex flex-col items-center justify-between gap-4 py-4 md:h-16 md:flex-row md:py-0">
+        <div className="flex flex-col items-center gap-4 px-2 md:flex-row md:gap-2 md:px-0">
           <p className="text-center text-sm leading-loose md:text-left">
-            © 2024 Theodore Mentis
+            Mikrouli.link - Made by Theodoros Mentis
           </p>
         </div>
         <div className="flex space-x-2">
@@ -61,7 +61,7 @@ export function Footer() {
           <BuyMeACoffee />
         </div>
         <div className="flex items-center space-x-1 text-sm">
-          <span className="hidden lg:inline-flex">Made with Next.js</span>
+          <span className="hidden lg:inline-flex">Made with </span>
           <Button
             variant="ghost"
             size="icon"
@@ -76,7 +76,6 @@ export function Footer() {
               <RiNextjsFill className="h-4 w-4" />
             </a>
           </Button>
-          <span className="hidden lg:inline-flex">& Tailwind CSS</span>
           <Button
             variant="ghost"
             size="icon"

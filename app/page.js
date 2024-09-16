@@ -85,9 +85,16 @@ export default function Home() {
               )}
             </>
           ) : (
-            <Button onClick={() => signIn()} className="w-full">
-              Sign in
-            </Button>
+            <div>
+              <Button onClick={() => signIn()} className="w-full">
+                Sign in
+              </Button>
+              <Link href="/auth/register">
+                <Button className="w-full mt-2">
+                  Register
+                </Button>
+              </Link>
+            </div>
           )}
         </CardContent>
         <CardFooter className="flex justify-between">

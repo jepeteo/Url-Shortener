@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import Link from "next/link";
+
+const MemoizedCard = memo(Card);
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -38,12 +40,14 @@ export default function Register() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
+      <MemoizedCard className="w-full max-w-md bg-slate-50">
+        <CardHeader className="text-4xl font-bold text-center">
+          <Link href="/">mikrouli.link</Link>
+          <CardTitle className="text-xl text-slate-600 my-2">
             Register
           </CardTitle>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
@@ -52,6 +56,7 @@ export default function Register() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Name"
               required
+              className="bg-white"
             />
             <Input
               type="email"
@@ -59,6 +64,7 @@ export default function Register() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
               required
+              className="bg-white"
             />
             <Input
               type="password"
@@ -66,6 +72,7 @@ export default function Register() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               required
+              className="bg-white"
             />
             <Button type="submit" className="w-full">
               Register
@@ -77,7 +84,7 @@ export default function Register() {
             <Button variant="link">Already have an account? Sign in</Button>
           </Link>
         </CardFooter>
-      </Card>
+      </MemoizedCard>
     </div>
   );
 }

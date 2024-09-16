@@ -9,31 +9,42 @@ import Link from "next/link";
 
 export default function UrlAnalytics({ params }) {
   const [analytics, setAnalytics] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { data: session, status } = useSession();
   const router = useRouter();
+  console.log("Params:", params);
   const { id } = params;
 
   useEffect(() => {
-    if (!session) {
+    if (status === "unauthenticated") {
       router.push("/auth/signin");
-    } else {
-      const fetchAnalytics = async () => {
-        try {
-          const response = await fetch(`/api/analytics/${id}`);
-          if (response.ok) {
-            const data = await response.json();
-            setAnalytics(data);
-          }
-        } catch (error) {
-          console.error("Error fetching analytics:", error);
-        }
-      };
-
+    } else if (status === "authenticated") {
       fetchAnalytics();
     }
-  }, [session, router, id]);
+  }, [status, router, id]);
 
-  if (!analytics) return <div>Loading...</div>;
+  const fetchAnalytics = async () => {
+    try {
+      const response = await fetch(`/api/analytics/${id}`);
+      if (!response.ok) {
+        console.error(`HTTP error! status: ${response.status}`);
+        console.error("Response:", await response.text());
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      setError("Failed to fetch analytics. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (status === "loading" || isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!analytics) return <div>No analytics data available</div>;
 
   return (
     <div className="container mx-auto p-4">

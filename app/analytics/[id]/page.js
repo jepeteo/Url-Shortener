@@ -5,7 +5,82 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  FaChrome,
+  FaSafari,
+  FaEdge,
+  FaMobileAlt,
+  FaDesktop,
+  FaRobot,
+} from "react-icons/fa";
+import UAParser from "ua-parser-js";
 import Link from "next/link";
+
+const getBrowserIcon = (browserName) => {
+  if (!browserName) return null;
+
+  switch (browserName.toLowerCase()) {
+    case "chrome":
+      return <FaChrome />;
+    case "safari":
+      return <FaSafari />;
+    case "edge":
+      return <FaEdge />;
+    case "facebook bot":
+      return <FaRobot />;
+    default:
+      return null;
+  }
+};
+
+const getDeviceIcon = (deviceType) => {
+  switch (deviceType) {
+    case "mobile":
+      return <FaMobileAlt />;
+    case "desktop":
+      return <FaDesktop />;
+    case "bot":
+      return <FaRobot />;
+    default:
+      return <FaDesktop />;
+  }
+};
+
+const formatUserAgent = (userAgent) => {
+  if (userAgent.includes("facebookexternalhit")) {
+    return {
+      browser: "Facebook Bot",
+      os: "N/A",
+      device: "bot",
+    };
+  }
+
+  const parser = new UAParser(userAgent);
+  const result = parser.getResult();
+  return {
+    browser: result.browser?.name || "Unknown",
+    os: result.os?.name || "Unknown",
+    device: result.device?.type || "desktop",
+  };
+};
+
+const formatReferrer = (referrer) => {
+  if (!referrer) return "Direct";
+  try {
+    const url = new URL(referrer);
+    return url.hostname;
+  } catch {
+    return referrer;
+  }
+};
 
 export default function UrlAnalytics({ params }) {
   const [analytics, setAnalytics] = useState(null);
@@ -42,6 +117,30 @@ export default function UrlAnalytics({ params }) {
     }
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const time = date.toTimeString().slice(0, 5);
+
+    return `${day} ${month} ${year} || ${time}`;
+  };
+
   if (status === "loading" || isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!analytics) return <div>No analytics data available</div>;
@@ -59,26 +158,42 @@ export default function UrlAnalytics({ params }) {
           <CardTitle>Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>
-            <strong>Original URL:</strong> {analytics.originalUrl}
-          </p>
-          <p>
-            <strong>Short URL:</strong>{" "}
-            {`${process.env.NEXT_PUBLIC_BASE_URL}/${analytics.shortCode}`}
-          </p>
-          <p>
-            <strong>Total Clicks:</strong> {analytics.clicks}
-          </p>
-          <p>
-            <strong>Created At:</strong>{" "}
-            {new Date(analytics.createdAt).toLocaleString()}
-          </p>
-          <p>
-            <strong>Last Clicked:</strong>{" "}
-            {analytics.lastClickedAt
-              ? new Date(analytics.lastClickedAt).toLocaleString()
-              : "N/A"}
-          </p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Metric</TableHead>
+                <TableHead>Value</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>Original URL</TableCell>
+                <TableCell>{analytics.originalUrl}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Short URL</TableCell>
+                <TableCell>{`${process.env.NEXT_PUBLIC_BASE_URL}/${analytics.shortCode}`}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Total Clicks</TableCell>
+                <TableCell>{analytics.clicks}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Created At</TableCell>
+                <TableCell>
+                  {new Date(analytics.createdAt).toLocaleString()}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Last Clicked</TableCell>
+                <TableCell>
+                  {analytics.lastClickedAt
+                    ? new Date(analytics.lastClickedAt).toLocaleString()
+                    : "N/A"}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
       <Card className="mb-4">
@@ -87,14 +202,47 @@ export default function UrlAnalytics({ params }) {
         </CardHeader>
         <CardContent>
           {analytics.clickData && analytics.clickData.length > 0 ? (
-            <ul>
-              {analytics.clickData.map((click, index) => (
-                <li key={index}>
-                  {new Date(click.timestamp).toLocaleString()} - IP: {click.ip},
-                  User Agent: {click.userAgent}
-                </li>
-              ))}
-            </ul>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>IP Address</TableHead>
+                  <TableHead>Browser</TableHead>
+                  <TableHead>OS</TableHead>
+                  <TableHead>Device</TableHead>
+                  <TableHead>Referer</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {analytics.clickData.map((click, index) => {
+                  const { browser, os, device } = formatUserAgent(
+                    click.userAgent
+                  );
+                  return (
+                    <TableRow key={index}>
+                      <TableCell className="w-2/12">
+                        {formatDate(click.timestamp)}
+                      </TableCell>
+                      <TableCell className="w-2/12">{click.ip}</TableCell>
+                      <TableCell className="w-2/12">
+                        <span className="flex items-center gap-2">
+                          {getBrowserIcon(browser)} {browser}
+                        </span>
+                      </TableCell>
+                      <TableCell className="w-2/12">{os}</TableCell>
+                      <TableCell className="w-2/12">
+                        <span className="flex items-center gap-2">
+                          {getDeviceIcon(device)} {device}
+                        </span>
+                      </TableCell>
+                      <TableCell className="w-2/12">
+                        {formatReferrer(click.referer)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           ) : (
             <p>No click data available</p>
           )}

@@ -22,6 +22,14 @@ import {
   FaRobot,
 } from "react-icons/fa";
 import UAParser from "ua-parser-js";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import Link from "next/link";
 
 const getBrowserIcon = (browserName) => {
@@ -87,9 +95,20 @@ export default function UrlAnalytics({ params }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { data: session, status } = useSession();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const router = useRouter();
-  console.log("Params:", params);
   const { id } = params;
+
+  const sortedClickData =
+    analytics && analytics.clickData
+      ? analytics.clickData.sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+        )
+      : [];
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = sortedClickData.slice(indexOfFirstItem, indexOfLastItem);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -202,47 +221,90 @@ export default function UrlAnalytics({ params }) {
         </CardHeader>
         <CardContent>
           {analytics.clickData && analytics.clickData.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>IP Address</TableHead>
-                  <TableHead>Browser</TableHead>
-                  <TableHead>OS</TableHead>
-                  <TableHead>Device</TableHead>
-                  <TableHead>Referer</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {analytics.clickData.map((click, index) => {
-                  const { browser, os, device } = formatUserAgent(
-                    click.userAgent
-                  );
-                  return (
-                    <TableRow key={index}>
-                      <TableCell className="w-2/12">
-                        {formatDate(click.timestamp)}
-                      </TableCell>
-                      <TableCell className="w-2/12">{click.ip}</TableCell>
-                      <TableCell className="w-2/12">
-                        <span className="flex items-center gap-2">
-                          {getBrowserIcon(browser)} {browser}
-                        </span>
-                      </TableCell>
-                      <TableCell className="w-2/12">{os}</TableCell>
-                      <TableCell className="w-2/12">
-                        <span className="flex items-center gap-2">
-                          {getDeviceIcon(device)} {device}
-                        </span>
-                      </TableCell>
-                      <TableCell className="w-2/12">
-                        {formatReferrer(click.referer)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Timestamp</TableHead>
+                    <TableHead>IP Address</TableHead>
+                    <TableHead>Browser</TableHead>
+                    <TableHead>OS</TableHead>
+                    <TableHead>Device</TableHead>
+                    <TableHead>Referer</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentItems.map((click, index) => {
+                    const { browser, os, device } = formatUserAgent(
+                      click.userAgent
+                    );
+                    return (
+                      <TableRow key={index}>
+                        <TableCell className="w-2/12">
+                          {formatDate(click.timestamp)}
+                        </TableCell>
+                        <TableCell className="w-2/12">{click.ip}</TableCell>
+                        <TableCell className="w-2/12">
+                          <span className="flex items-center gap-2">
+                            {getBrowserIcon(browser)} {browser}
+                          </span>
+                        </TableCell>
+                        <TableCell className="w-2/12">{os}</TableCell>
+                        <TableCell className="w-2/12">
+                          <span className="flex items-center gap-2">
+                            {getDeviceIcon(device)} {device}
+                          </span>
+                        </TableCell>
+                        <TableCell className="w-2/12">
+                          {formatReferrer(click.referer)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+
+              <Pagination className="mt-8 mb-2">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
+                      disabled={currentPage === 1}
+                    />
+                  </PaginationItem>
+                  {[
+                    ...Array(Math.ceil(sortedClickData.length / itemsPerPage)),
+                  ].map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(i + 1)}
+                        isActive={currentPage === i + 1}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        setCurrentPage((prev) =>
+                          Math.min(
+                            Math.ceil(sortedClickData.length / itemsPerPage),
+                            prev + 1
+                          )
+                        )
+                      }
+                      disabled={
+                        currentPage ===
+                        Math.ceil(sortedClickData.length / itemsPerPage)
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </>
           ) : (
             <p>No click data available</p>
           )}

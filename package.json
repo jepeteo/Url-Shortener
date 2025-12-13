@@ -17,7 +17,7 @@
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "dompurify": "^3.1.6",
+    "dompurify": "^3.3.1",
     "dotenv": "^16.4.5",
     "express-rate-limit": "^7.4.0",
     "isomorphic-dompurify": "^2.15.0",

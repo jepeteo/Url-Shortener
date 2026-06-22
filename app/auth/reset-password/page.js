@@ -3,64 +3,78 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Link from "next/link";
 
 export default function ResetPassword() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setMessage("");
+    setError("");
+
     try {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
         setMessage(data.message);
       } else {
-        setMessage('An error occurred. Please try again.');
+        setError(data.error || "An error occurred. Please try again.");
       }
-    } catch (error) {
-      console.error('Error:', error);
-      setMessage('An error occurred. Please try again.');
+    } catch {
+      setError("An error occurred. Please try again.");
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Reset Password
-          </CardTitle>
+          <CardTitle className="text-center text-2xl font-bold">Reset Password</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-            />
+            <div>
+              <label htmlFor="email" className="mb-1 block text-sm font-medium">
+                Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
             <Button type="submit" className="w-full">
               Send Reset Link
             </Button>
           </form>
           {message && (
-            <p className="mt-4 text-center text-green-500">{message}</p>
+            <Alert variant="success" className="mt-4" role="status">
+              <AlertTitle>Check your email</AlertTitle>
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
           )}
+          {error && (
+            <Alert variant="error" className="mt-4" role="alert">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <p className="mt-4 text-center text-sm">
+            <Link href="/auth/signin" className="text-primary hover:underline">
+              Back to sign in
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

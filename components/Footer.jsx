@@ -1,58 +1,46 @@
+"use client";
+
 import { Github, Linkedin, Mail } from "lucide-react";
 import BuyMeACoffee from "@/components/BuyMeACoffee";
 import { RiTailwindCssFill, RiNextjsFill } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 export function Footer() {
   return (
     <footer className="border-t">
       <div className="container flex flex-col items-center justify-between gap-4 py-4 md:h-16 md:flex-row md:py-0">
-        <div className="flex flex-col items-center gap-4 px-2 md:flex-row md:gap-2 md:px-0">
+        <div className="flex flex-col items-center gap-4 px-2 md:flex-row md:gap-4 md:px-0">
           <p className="text-center text-sm leading-loose md:text-left">
-            Mikrouli.link - Made by Theodoros Mentis
+            Mikrouli.link — Made by Theodoros Mentis
           </p>
+          <Link href="/pricing" className="text-sm text-primary hover:underline">
+            Pricing
+          </Link>
         </div>
         <div className="flex space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-gray-100 hover:bg-gray-200"
-            asChild
-          >
+          <Button variant="ghost" size="icon" className="bg-gray-100 hover:bg-gray-200" asChild>
             <a
               href="https://github.com/jepeteo"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="GitHub profile"
             >
               <Github className="h-4 w-4" />
             </a>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-gray-100 hover:bg-gray-200"
-            asChild
-          >
+          <Button variant="ghost" size="icon" className="bg-gray-100 hover:bg-gray-200" asChild>
             <a
               href="https://www.linkedin.com/in/thmentis/"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="LinkedIn profile"
             >
               <Linkedin className="h-4 w-4" />
             </a>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-gray-100 hover:bg-gray-200"
-            asChild
-          >
-            <a
-              href="mailto:th.mentis@gmail.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+          <Button variant="ghost" size="icon" className="bg-gray-100 hover:bg-gray-200" asChild>
+            <a href="mailto:th.mentis@gmail.com" aria-label="Send email">
               <Mail className="h-4 w-4" />
             </a>
           </Button>
@@ -62,30 +50,22 @@ export function Footer() {
         </div>
         <div className="flex items-center space-x-1 text-sm">
           <span className="hidden lg:inline-flex">Made with </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-gray-100 hover:bg-gray-200"
-            asChild
-          >
+          <Button variant="ghost" size="icon" className="bg-gray-100 hover:bg-gray-200" asChild>
             <a
               href="https://nextjs.org/"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Next.js"
             >
               <RiNextjsFill className="h-4 w-4" />
             </a>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-gray-100 hover:bg-gray-200"
-            asChild
-          >
+          <Button variant="ghost" size="icon" className="bg-gray-100 hover:bg-gray-200" asChild>
             <a
               href="https://tailwindcss.com/"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Tailwind CSS"
             >
               <RiTailwindCssFill className="h-4 w-4" />
             </a>

@@ -1,39 +1,47 @@
 import { NextResponse } from "next/server";
 import clientPromise from "../../../lib/mongodb";
+import { recordClickAsync } from "@/lib/clickTracking";
+import {
+  getCachedRedirect,
+  setCachedRedirect,
+} from "@/lib/redirectCache";
 
 export async function GET(request, { params }) {
-  const { shortCode } = params;
+  const { shortCode } = await params;
 
   try {
+    const cached = getCachedRedirect(shortCode);
+    if (cached) {
+      recordClickAsync(
+        { _id: cached.urlId, shortCode },
+        request
+      );
+      return NextResponse.redirect(cached.originalUrl, 307);
+    }
+
     const client = await clientPromise;
     const db = client.db("urlShortener");
 
-    const urlEntry = await db
-      .collection("urls")
-      .findOne({ shortCode, expiresAt: { $gt: new Date() } });
+    const urlEntry = await db.collection("urls").findOne({
+      shortCode,
+      $or: [{ expiresAt: { $gt: new Date() } }, { expiresAt: null }],
+    });
 
     if (urlEntry) {
-      const clickData = {
-        timestamp: new Date(),
-        ip: request.headers.get("x-forwarded-for") || "unknown",
-        userAgent: request.headers.get("user-agent"),
-        referer: request.headers.get("referer") || null,
-      };
+      setCachedRedirect(shortCode, urlEntry.originalUrl, urlEntry._id);
+      recordClickAsync(urlEntry, request);
 
-      await db.collection("urls").updateOne(
-        { _id: urlEntry._id },
-        {
-          $inc: { clicks: 1 },
-          $set: { lastClickedAt: new Date() },
-          $push: { clickData: clickData },
-        }
-      );
-
-      return NextResponse.redirect(urlEntry.originalUrl);
-    } else {
-      return NextResponse.redirect("/"); // Redirect to home page if URL not found or expired
+      const status = urlEntry.expiresAt === null ? 308 : 307;
+      return NextResponse.redirect(urlEntry.originalUrl, status);
     }
+
+    return NextResponse.redirect(
+      new URL("/link-not-found", request.url).toString()
+    );
   } catch (error) {
-    return NextResponse.redirect("/error"); // Redirect to an error page
+    console.error("Redirect error:", error);
+    return NextResponse.redirect(
+      new URL("/link-not-found", request.url).toString()
+    );
   }
 }

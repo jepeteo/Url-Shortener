@@ -1,26 +1,25 @@
-require("dotenv").config({ path: ".env.local" });
-const { MongoClient } = require("mongodb");
-
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  console.error("MONGODB_URI is not defined in the environment variables");
-  process.exit(1);
-}
-
-const client = new MongoClient(uri);
+import clientPromise from "../lib/mongodb.js";
 
 async function createIndexes() {
-  try {
-    await client.connect();
-    const db = client.db("urlShortener");
+  const client = await clientPromise;
+  const db = client.db("urlShortener");
 
-    console.log("Creating index on shortCode field...");
-    await db.collection("urls").createIndex({ shortCode: 1 }, { unique: true });
+  await db.collection("urls").createIndex({ shortCode: 1 }, { unique: true });
+  await db.collection("urls").createIndex({ userId: 1, createdAt: -1 });
+  await db.collection("urls").createIndex({ shortCode: 1, expiresAt: 1 });
+  await db.collection("urls").createIndex(
+    { expiresAt: 1 },
+    { expireAfterSeconds: 0, partialFilterExpression: { expiresAt: { $type: "date" } } }
+  );
+  await db.collection("users").createIndex({ email: 1 }, { unique: true });
+  await db.collection("clicks").createIndex({ urlId: 1, timestamp: -1 });
+  await db.collection("clicks").createIndex({ shortCode: 1, timestamp: -1 });
 
-    console.log("Index created successfully");
-  } finally {
-    await client.close();
-  }
+  console.log("Indexes created successfully");
+  process.exit(0);
 }
 
-createIndexes().catch(console.error);
+createIndexes().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

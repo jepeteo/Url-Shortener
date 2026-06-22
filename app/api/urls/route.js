@@ -5,45 +5,45 @@ import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get("page")) || 1;
-  const limit = parseInt(searchParams.get("limit")) || 10;
-  const userId = searchParams.get("userId");
-
+  const page = parseInt(searchParams.get("page"), 10) || 1;
+  const limit = parseInt(searchParams.get("limit"), 10) || 10;
 
   const session = await getServerSession(authOptions);
 
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  const userId = session.user.id;
   const client = await clientPromise;
   const db = client.db("urlShortener");
   const skip = (page - 1) * limit;
+
   const urls = await db
     .collection("urls")
-    .find({ userId: userId })
+    .find({ userId })
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
     .toArray();
 
   const activeLinks = await db.collection("urls").countDocuments({
-    userId: session.user.id,
-    expiresAt: { $gt: new Date() },
+    userId,
+    $or: [{ expiresAt: { $gt: new Date() } }, { expiresAt: null }],
   });
+
   const totalClicksResult = await db
     .collection("urls")
     .aggregate([
-      { $match: { userId: session.user.id } },
+      { $match: { userId } },
       { $group: { _id: null, totalClicks: { $sum: "$clicks" } } },
     ])
     .toArray();
+
   const totalClicks =
     totalClicksResult.length > 0 ? totalClicksResult[0].totalClicks : 0;
 
-  const total = await db
-    .collection("urls")
-    .countDocuments({ userId: session.user.id });
+  const total = await db.collection("urls").countDocuments({ userId });
 
   return NextResponse.json({ urls, total, activeLinks, totalClicks });
 }

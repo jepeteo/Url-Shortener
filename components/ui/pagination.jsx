@@ -37,46 +37,84 @@ const PaginationLink = ({
   className,
   isActive,
   size = "icon",
+  onClick,
+  disabled,
+  children,
   ...props
-}) => (
-  <a
-    aria-current={isActive ? "page" : undefined}
-    className={cn(buttonVariants({
+}) => {
+  const classes = cn(
+    buttonVariants({
       variant: isActive ? "outline" : "ghost",
       size,
-    }), className)}
-    {...props} />
-)
+    }),
+    className
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        aria-current={isActive ? "page" : undefined}
+        className={classes}
+        onClick={onClick}
+        disabled={disabled}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <a
+      aria-current={isActive ? "page" : undefined}
+      className={classes}
+      {...props}
+    >
+      {children}
+    </a>
+  );
+};
 PaginationLink.displayName = "PaginationLink"
 
 const PaginationPrevious = ({
   className,
+  onClick,
+  disabled,
   ...props
 }) => (
   <PaginationLink
     aria-label="Go to previous page"
     size="default"
     className={cn("gap-1 pl-2.5", className)}
-    {...props}>
+    onClick={onClick}
+    disabled={disabled}
+    {...props}
+  >
     <ChevronLeftIcon className="h-4 w-4" />
     <span>Previous</span>
   </PaginationLink>
-)
+);
 PaginationPrevious.displayName = "PaginationPrevious"
 
 const PaginationNext = ({
   className,
+  onClick,
+  disabled,
   ...props
 }) => (
   <PaginationLink
     aria-label="Go to next page"
     size="default"
     className={cn("gap-1 pr-2.5", className)}
-    {...props}>
+    onClick={onClick}
+    disabled={disabled}
+    {...props}
+  >
     <span>Next</span>
     <ChevronRightIcon className="h-4 w-4" />
   </PaginationLink>
-)
+);
 PaginationNext.displayName = "PaginationNext"
 
 const PaginationEllipsis = ({

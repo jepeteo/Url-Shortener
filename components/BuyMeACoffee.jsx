@@ -1,5 +1,3 @@
-"use client";
-import { useEffect, useRef } from "react";
 import Image from "next/image";
 
 export default function BuyMeACoffee() {
@@ -8,6 +6,7 @@ export default function BuyMeACoffee() {
       href="https://www.buymeacoffee.com/theodorosm"
       target="_blank"
       rel="noopener noreferrer"
+      aria-label="Buy me a coffee"
     >
       <Image
         src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png"

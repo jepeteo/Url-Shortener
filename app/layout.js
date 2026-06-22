@@ -2,25 +2,32 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Footer } from "@/components/Footer";
+import { Toaster } from "sonner";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "URL Shortener - Mentis T.",
+  title: "mikrouli.link — URL Shortener",
   description:
-    "A url shortener built with Next.js and MongoDB by Theodororos Mentis.",
+    "Shorten URLs, track clicks, and manage links with mikrouli.link by Theodoros Mentis.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://mikrouli.link"),
+    icons: {
+      icon: "/favicon.svg",
+    },
   openGraph: {
-    title: "URL Shortener - Mentis T.",
+    title: "mikrouli.link — URL Shortener",
     description:
-      "A url shortener built with Next.js and MongoDB by Theodororos Mentis.",
-    url: "https://your-url-shortener.com",
-    siteName: "URL Shortener",
+      "Shorten URLs, track clicks, and manage links with analytics and QR codes.",
+    url: process.env.NEXT_PUBLIC_BASE_URL || "https://mikrouli.link",
+    siteName: "mikrouli.link",
     images: [
       {
-        url: "https://your-url-shortener.com/og-image.jpg",
+        url: "/og-image.svg",
         width: 1200,
         height: 630,
+        alt: "mikrouli.link URL Shortener",
       },
     ],
-    icons: [{ rel: "icon", url: "/favicon.png", type: "image/png" }],
     locale: "en_US",
     type: "website",
   },
@@ -29,14 +36,20 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="flex flex-col min-h-screen">
-        <a href="#main-content" className="sr-only focus:not-sr-only">
+      <body className={`${inter.className} flex min-h-screen flex-col`}>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-background focus:px-4 focus:py-2"
+        >
           Skip to main content
         </a>
         <Providers>
-          <main id="main-content">{children}</main>
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
         </Providers>
         <Footer />
+        <Toaster richColors position="top-center" />
       </body>
     </html>
   );

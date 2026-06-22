@@ -1,21 +1,14 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
-import { LogOut } from "lucide-react";
+import { InfoIcon, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
-
-import dynamic from "next/dynamic";
-const DashboardContent = dynamic(
-  () => import("../../components/DashboardContent"),
-  {
-    loading: () => <p>Loading...</p>,
-  }
-);
+import Link from "next/link";
+import DashboardContent from "@/components/DashboardContent";
 
 export default function Dashboard() {
   const [urls, setUrls] = useState([]);
@@ -23,79 +16,121 @@ export default function Dashboard() {
   const [totalClicks, setTotalClicks] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [usage, setUsage] = useState(null);
+  const [apiKey, setApiKey] = useState(null);
   const itemsPerPage = 10;
 
   const { data: session, status } = useSession();
   const router = useRouter();
 
   const fetchUrls = useCallback(async () => {
-    const cacheKey = `urls-${currentPage}-${itemsPerPage}-${session?.user?.id}`;
-    const cache = await caches.open("url-shortener-cache");
-
-    // Try to get the cached response
-    const cachedResponse = await cache.match(cacheKey);
-    if (cachedResponse) {
-      const data = await cachedResponse.json();
-      setUrls(data.urls);
-      setTotalPages(Math.ceil(data.total / itemsPerPage));
-      setActiveLinks(data.activeLinks);
-      setTotalClicks(data.totalClicks);
-    }
-
-    // Fetch fresh data from the API
-    const response = await fetch(
-      `/api/urls?page=${currentPage}&limit=${itemsPerPage}&userId=${session.user.id}`
-    );
-    if (response.ok) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/urls?page=${currentPage}&limit=${itemsPerPage}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch URLs");
+      }
       const data = await response.json();
       setUrls(data.urls);
-      setTotalPages(Math.ceil(data.total / itemsPerPage));
+      setTotalPages(Math.max(1, Math.ceil(data.total / itemsPerPage)));
       setActiveLinks(data.activeLinks);
       setTotalClicks(data.totalClicks);
-
-      // Update the cache with the fresh data
-      cache.put(cacheKey, new Response(JSON.stringify(data)));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, [currentPage, itemsPerPage, session?.user?.id]);
+  }, [currentPage]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
     } else if (status === "authenticated") {
       fetchUrls();
+      fetch("/api/usage")
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => data && setUsage(data));
     }
-  }, [status, currentPage, router, fetchUrls]);
+  }, [status, router, fetchUrls]);
+
+  if (status === "loading") {
+    return <div className="container mx-auto p-4">Loading...</div>;
+  }
+
+  const handleGenerateApiKey = async () => {
+    const response = await fetch("/api/api-keys", { method: "POST" });
+    const data = await response.json();
+    if (response.ok) {
+      setApiKey(data.apiKey);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
-      {session?.user?.email === "demo@example.com" && (
-        <Alert className="mb-4 bg-red-50">
-          <InfoIcon className="h-4 w-4" />
-          <AlertTitle>Demo Account</AlertTitle>
-          <AlertDescription>
-            You are currently using a demo account. Some features may be
-            limited.
+      {usage && Number.isFinite(usage.limit) && (
+        <Alert className="mb-4">
+          <AlertTitle>
+            {usage.plan.charAt(0).toUpperCase() + usage.plan.slice(1)} plan — {usage.count}/{usage.limit} links this month
+          </AlertTitle>
+          <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span>{usage.allowed ? "You can create more links." : "Monthly limit reached."}</span>
+            {!usage.allowed && (
+              <Button asChild size="sm">
+                <Link href="/pricing">Upgrade plan</Link>
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}
-      <div className="flex justify-between items-center mb-6">
+      {session?.user?.plan === "business" && (
+        <Alert className="mb-4">
+          <AlertTitle>API access</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>Use POST /api/v1/shorten with header x-api-key.</p>
+            {apiKey ? (
+              <code className="block break-all rounded bg-muted p-2 text-xs">{apiKey}</code>
+            ) : (
+              <Button size="sm" onClick={handleGenerateApiKey}>Generate API key</Button>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+      {session?.user?.email === "demo@example.com" && (
+        <Alert className="mb-4 bg-amber-50">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>Demo Account</AlertTitle>
+          <AlertDescription>
+            You are using a demo account. Some features may be limited.
+          </AlertDescription>
+        </Alert>
+      )}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Your Dashboard</h1>
-        <Button onClick={() => signOut({ callbackUrl: "/" })}>
-          <LogOut className="mr-2 h-4 w-4" /> Sign Out
-        </Button>{" "}
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/pricing">Upgrade</Link>
+          </Button>
+          <Button onClick={() => signOut({ callbackUrl: "/" })}>
+            <LogOut className="mr-2 h-4 w-4" /> Sign Out
+          </Button>
+        </div>
       </div>
-      <Suspense fallback={<div>Loading...</div>}>
-        <DashboardContent
-          urls={urls}
-          setUrls={setUrls}
-          totalClicks={totalClicks}
-          activeLinks={activeLinks}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          totalPages={totalPages}
-          fetchUrls={fetchUrls}
-        />
-      </Suspense>
+      <DashboardContent
+        urls={urls}
+        totalClicks={totalClicks}
+        activeLinks={activeLinks}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalPages={totalPages}
+        isLoading={isLoading}
+        error={error}
+        onRefresh={fetchUrls}
+      />
     </div>
   );
 }

@@ -1,119 +1,72 @@
-"use client";
-import React, { useState, memo } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart2, Link2, QrCode, Shield } from "lucide-react";
 
-const MemoizedCard = memo(Card);
+const features = [
+  {
+    icon: Link2,
+    title: "Short links",
+    description: "Create branded short URLs with optional custom aliases.",
+  },
+  {
+    icon: BarChart2,
+    title: "Click analytics",
+    description: "Track clicks, referrers, devices, and export your data.",
+  },
+  {
+    icon: QrCode,
+    title: "QR codes",
+    description: "Generate QR codes for any shortened link from your dashboard.",
+  },
+  {
+    icon: Shield,
+    title: "Secure redirects",
+    description: "HTTPS-only destinations with rate limiting and link expiry.",
+  },
+];
 
-export default function Home() {
-  const [url, setUrl] = useState("");
-  const [shortUrl, setShortUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await fetch("/api/shorten", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to shorten URL");
-      }
-      const data = await response.json();
-      setShortUrl(data.shortUrl);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const { data: session } = useSession();
-
+export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-[64vh] items-center justify-center p-4 md:p-24 md:min-h-[88vh]">
-      <MemoizedCard className="w-full max-w-md bg-slate-50">
-        <CardHeader className="text-4xl font-bold text-center">
-          mikrouli.link
-          <CardTitle className="text-xl text-slate-600 my-2">
-            - - URL Shortener - -
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          {session ? (
-            <>
-              <p className="text-center mb-4">
-                Signed in as {session.user.email}
-              </p>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <Input
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Enter your URL here"
-                  required
-                />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Shortening..." : "Shorten URL"}
-                </Button>
-              </form>
-              {error && <p className="mt-4 text-red-500">{error}</p>}
-              {shortUrl && (
-                <div className="mt-8">
-                  <p>Your shortened URL:</p>
-                  <a href={shortUrl} className="text-blue-500 hover:underline">
-                    {shortUrl}
-                  </a>
-                </div>
-              )}
-            </>
-          ) : (
-            <div>
-              <Button onClick={() => signIn()} className="w-full">
-                Sign in
-              </Button>
-              <Link href="/auth/register">
-                <Button className="w-full mt-2">
-                  Register
-                </Button>
-              </Link>
-            </div>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          {session && (
-            <>
-              <Button onClick={() => signOut()} variant="outline">
-                Sign out
-              </Button>
-              <Link href="/dashboard">
-                <Button variant="outline">Go to Dashboard</Button>
-              </Link>
-            </>
-          )}
-        </CardFooter>
-
-        <div className="mt-[-40px] text-right italic text-sm p-4 text-slate-500">
-          by Theodoros Mentis
+    <div className="container mx-auto px-4 py-12 md:py-20">
+      <section className="mx-auto max-w-3xl text-center">
+        <h1 className="text-4xl font-bold tracking-tight md:text-5xl">mikrouli.link</h1>
+        <p className="mt-4 text-lg text-muted-foreground">
+          A modern URL shortener with analytics, QR codes, and simple pricing for creators and teams.
+        </p>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button asChild size="lg">
+            <Link href="/app">Shorten a URL</Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href="/pricing">View pricing</Link>
+          </Button>
         </div>
-      </MemoizedCard>
+      </section>
+
+      <section className="mx-auto mt-16 grid max-w-5xl gap-6 sm:grid-cols-2">
+        {features.map((feature) => (
+          <Card key={feature.title}>
+            <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+              <feature.icon className="h-5 w-5 text-primary" aria-hidden="true" />
+              <CardTitle className="text-lg">{feature.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">{feature.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+
+      <section className="mx-auto mt-16 max-w-2xl text-center">
+        <h2 className="text-2xl font-semibold">Start free, upgrade when you grow</h2>
+        <p className="mt-2 text-muted-foreground">
+          20 free links per month. Pro from $6/mo. Business API access from $15/mo.
+        </p>
+        <Button asChild className="mt-6">
+          <Link href="/auth/register">Get started free</Link>
+        </Button>
+      </section>
     </div>
   );
 }

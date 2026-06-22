@@ -2,8 +2,8 @@ import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import clientPromise from "../../../../lib/mongodb";
-import { findUserByEmail, createNewUser } from "@/lib/userUtils";
 import { compare } from "bcryptjs";
+import { ObjectId } from "mongodb";
 
 export const authOptions = {
   providers: [
@@ -29,7 +29,12 @@ export const authOptions = {
           email: credentials.email,
         });
         if (user && (await compare(credentials.password, user.password))) {
-          return { id: user._id, name: user.name, email: user.email };
+          return {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            plan: user.plan || "free",
+          };
         }
         return null;
       },
@@ -37,11 +42,11 @@ export const authOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (account.provider === "github") {
+    async signIn({ user, account }) {
+      if (account?.provider === "github") {
         const client = await clientPromise;
         const db = client.db("urlShortener");
         const usersCollection = db.collection("users");
@@ -49,34 +54,38 @@ export const authOptions = {
         const existingUser = await usersCollection.findOne({
           email: user.email,
         });
+
         if (!existingUser) {
-          await usersCollection.insertOne({
+          const result = await usersCollection.insertOne({
             name: user.name,
             email: user.email,
-            githubId: profile.id,
+            githubId: account.providerAccountId,
+            plan: "free",
             createdAt: new Date(),
           });
+          user.id = result.insertedId.toString();
+        } else {
+          user.id = existingUser._id.toString();
         }
         return true;
       }
       return true;
     },
-    async jwt({ token, user, account }) {
-      if (account && user) {
-        token.accessToken = account.access_token;
+    async jwt({ token, user }) {
+      if (user) {
         token.id = user.id;
+        token.plan = user.plan || "free";
       }
       return token;
     },
-
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.sub;
+      if (token?.id) {
+        session.user.id = token.id;
+        session.user.plan = token.plan || "free";
       }
       return session;
     },
   },
-
   pages: {
     signIn: "/auth/signin",
     signOut: "/auth/signout",

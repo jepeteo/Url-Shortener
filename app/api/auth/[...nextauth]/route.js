@@ -5,6 +5,11 @@ import clientPromise from "../../../../lib/mongodb";
 import { compare } from "bcryptjs";
 import { ObjectId } from "mongodb";
 
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
 export const authOptions = {
   providers: [
     GithubProvider({
@@ -82,6 +87,9 @@ export const authOptions = {
       if (token?.id) {
         session.user.id = token.id;
         session.user.plan = token.plan || "free";
+      }
+      if (session.user?.email) {
+        session.user.isAdmin = ADMIN_EMAILS.includes(session.user.email.toLowerCase());
       }
       return session;
     },

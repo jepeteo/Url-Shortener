@@ -4,8 +4,13 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getStripe } from "@/lib/stripe";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { validateCsrf } from "@/lib/csrf";
 
-export async function POST() {
+export async function POST(request) {
+  if (!validateCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
+  }
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

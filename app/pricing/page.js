@@ -9,6 +9,7 @@ import { PLANS } from "@/lib/plans";
 import { Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { fetchWithCsrf } from "@/hooks/useCsrf";
 
 const tiers = [
   {
@@ -77,7 +78,7 @@ export default function PricingPage() {
 
     setLoadingPlan(planId);
     try {
-      const response = await fetch("/api/stripe/checkout", {
+      const response = await fetchWithCsrf("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -99,7 +100,7 @@ export default function PricingPage() {
 
   const handlePortal = async () => {
     try {
-      const response = await fetch("/api/stripe/portal", { method: "POST" });
+      const response = await fetchWithCsrf("/api/stripe/portal", { method: "POST" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       window.location.href = data.url;

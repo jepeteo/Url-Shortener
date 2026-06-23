@@ -9,6 +9,7 @@ import { CopyButton } from "@/components/CopyButton";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { fetchWithCsrf } from "@/hooks/useCsrf";
 import { EXPIRY_OPTIONS, getPlan } from "@/lib/plans";
 import {
   Select,
@@ -87,7 +88,7 @@ export function ShortenForm({ allowAnonymous = false, onSuccess }) {
         };
       }
 
-      const response = await fetch("/api/shorten", {
+      const response = await fetchWithCsrf("/api/shorten", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

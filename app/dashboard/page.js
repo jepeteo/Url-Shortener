@@ -9,6 +9,7 @@ import { InfoIcon, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import DashboardContent from "@/components/DashboardContent";
+import { fetchWithCsrf } from "@/hooks/useCsrf";
 
 export default function Dashboard() {
   const [urls, setUrls] = useState([]);
@@ -63,7 +64,7 @@ export default function Dashboard() {
   }
 
   const handleGenerateApiKey = async () => {
-    const response = await fetch("/api/api-keys", { method: "POST" });
+    const response = await fetchWithCsrf("/api/api-keys", { method: "POST" });
     const data = await response.json();
     if (response.ok) {
       setApiKey(data.apiKey);

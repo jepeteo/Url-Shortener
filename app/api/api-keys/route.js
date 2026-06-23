@@ -5,11 +5,21 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { generateApiKey, hashApiKey } from "@/lib/apiKeys";
 import { getPlan } from "@/lib/plans";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { validateCsrf } from "@/lib/csrf";
 
-export async function POST() {
+export async function POST(request) {
+  if (!validateCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
+  }
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!(await checkRateLimit(`apikey:${session.user.id}`, RATE_LIMITS.apiKey))) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
   const client = await clientPromise;

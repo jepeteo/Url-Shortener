@@ -22,18 +22,61 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { FaChrome, FaSafari, FaEdge, FaMobileAlt, FaDesktop, FaRobot } from "react-icons/fa";
+import {
+  FaChrome,
+  FaSafari,
+  FaEdge,
+  FaMobileAlt,
+  FaDesktop,
+  FaRobot,
+} from "react-icons/fa";
+import { BarChart2, Calendar, Globe, MousePointerClick } from "lucide-react";
 import UAParser from "ua-parser-js";
 import Link from "next/link";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+
+function StatCard({ title, value, icon: Icon }) {
+  return (
+    <Card className="card-hover">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {title}
+        </CardTitle>
+        {Icon && (
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg gradient-brand text-white">
+            <Icon className="h-4 w-4" aria-hidden="true" />
+          </span>
+        )}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold tracking-tight">{value}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="container mx-auto animate-pulse space-y-6 p-4 md:p-8">
+      <div className="h-10 w-64 rounded-lg bg-muted" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-28 rounded-xl bg-muted" />
+        ))}
+      </div>
+      <div className="h-72 rounded-xl bg-muted" />
+      <div className="h-96 rounded-xl bg-muted" />
+    </div>
+  );
+}
 
 function getBrowserIcon(browserName) {
   if (!browserName) return null;
@@ -91,6 +134,16 @@ function truncateUrl(url, max = 48) {
   return `${url.slice(0, max)}…`;
 }
 
+function getTopReferrer(clicks) {
+  const counts = {};
+  for (const click of clicks) {
+    const ref = formatReferrer(click.referer);
+    counts[ref] = (counts[ref] || 0) + 1;
+  }
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return sorted[0]?.[0] || "—";
+}
+
 export default function UrlAnalytics({ params }) {
   const { id } = use(params);
   const [analytics, setAnalytics] = useState(null);
@@ -134,8 +187,16 @@ export default function UrlAnalytics({ params }) {
       .reverse();
   }, [sortedClickData]);
 
+  const topReferrer = useMemo(
+    () => getTopReferrer(sortedClickData),
+    [sortedClickData]
+  );
+
   const indexOfLastItem = currentPage * itemsPerPage;
-  const currentItems = sortedClickData.slice(indexOfLastItem - itemsPerPage, indexOfLastItem);
+  const currentItems = sortedClickData.slice(
+    indexOfLastItem - itemsPerPage,
+    indexOfLastItem
+  );
   const totalPages = Math.max(1, Math.ceil(sortedClickData.length / itemsPerPage));
 
   const handleExport = () => {
@@ -164,7 +225,12 @@ export default function UrlAnalytics({ params }) {
   };
 
   if (status === "loading" || isLoading) {
-    return <div className="container mx-auto p-4">Loading analytics...</div>;
+    return (
+      <div className="relative">
+        <div className="glow absolute inset-0 -z-10" aria-hidden="true" />
+        <AnalyticsSkeleton />
+      </div>
+    );
   }
 
   if (error) {
@@ -183,175 +249,225 @@ export default function UrlAnalytics({ params }) {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">URL Analytics</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExport}>
-            Export CSV
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard">Back to Dashboard</Link>
-          </Button>
+    <div className="relative">
+      <div className="glow absolute inset-0 -z-10" aria-hidden="true" />
+      <div className="container mx-auto space-y-6 p-4 md:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Link <span className="gradient-text">Analytics</span>
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              <span title={analytics.originalUrl}>
+                {truncateUrl(analytics.originalUrl, 64)}
+              </span>
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExport}>
+              Export CSV
+            </Button>
+            <Button asChild>
+              <Link href="/dashboard">Back to Dashboard</Link>
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Overview</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p>
-            <span className="font-medium">Original URL:</span>{" "}
-            <span title={analytics.originalUrl}>{truncateUrl(analytics.originalUrl, 80)}</span>
-          </p>
-          <p>
-            <span className="font-medium">Short URL:</span>{" "}
-            {`${process.env.NEXT_PUBLIC_BASE_URL}/${analytics.shortCode}`}
-          </p>
-          <p>
-            <span className="font-medium">Total Clicks:</span> {analytics.clicks}
-          </p>
-          <p>
-            <span className="font-medium">Created:</span>{" "}
-            {new Date(analytics.createdAt).toLocaleString()}
-          </p>
-          <p>
-            <span className="font-medium">Last Clicked:</span>{" "}
-            {analytics.lastClickedAt
-              ? new Date(analytics.lastClickedAt).toLocaleString()
-              : "N/A"}
-          </p>
-        </CardContent>
-      </Card>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Total Clicks"
+            value={analytics.clicks}
+            icon={MousePointerClick}
+          />
+          <StatCard
+            title="Top Referrer"
+            value={topReferrer}
+            icon={Globe}
+          />
+          <StatCard
+            title="Created"
+            value={new Date(analytics.createdAt).toLocaleDateString()}
+            icon={Calendar}
+          />
+          <StatCard
+            title="Last Clicked"
+            value={
+              analytics.lastClickedAt
+                ? new Date(analytics.lastClickedAt).toLocaleDateString()
+                : "Never"
+            }
+            icon={BarChart2}
+          />
+        </div>
 
-      {chartData.length > 0 && (
-        <Card className="mb-4">
+        <Card className="border-border/70">
           <CardHeader>
-            <CardTitle>Clicks over time</CardTitle>
+            <CardTitle className="text-base">Short link</CardTitle>
           </CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Line type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" />
-              </LineChart>
-            </ResponsiveContainer>
+          <CardContent className="text-sm">
+            <a
+              href={`${process.env.NEXT_PUBLIC_BASE_URL}/${analytics.shortCode}`}
+              className="text-primary hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {`${process.env.NEXT_PUBLIC_BASE_URL}/${analytics.shortCode}`}
+            </a>
           </CardContent>
         </Card>
-      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Click History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {sortedClickData.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No clicks recorded yet.</p>
-          ) : (
-            <>
-              <div className="space-y-4 md:hidden">
-                {currentItems.map((click, index) => {
-                  const { browser, os, device } = formatUserAgent(click.userAgent);
-                  return (
-                    <Card key={index}>
-                      <CardContent className="space-y-2 p-4 text-sm">
-                        <p>
-                          <span className="font-medium">Time:</span>{" "}
-                          {new Date(click.timestamp).toLocaleString()}
-                        </p>
-                        <p>
-                          <span className="font-medium">Browser:</span> {browser}
-                        </p>
-                        <p>
-                          <span className="font-medium">OS:</span> {os}
-                        </p>
-                        <p>
-                          <span className="font-medium">Device:</span> {device}
-                        </p>
-                        <p>
-                          <span className="font-medium">Referer:</span>{" "}
-                          {formatReferrer(click.referer)}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+        {chartData.length > 0 && (
+          <Card className="border-border/70">
+            <CardHeader>
+              <CardTitle>Clicks over time</CardTitle>
+            </CardHeader>
+            <CardContent className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="clickGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="clicks"
+                    stroke="hsl(var(--primary))"
+                    fill="url(#clickGradient)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
-              <div className="hidden md:block overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Timestamp</TableHead>
-                      <TableHead>IP</TableHead>
-                      <TableHead>Browser</TableHead>
-                      <TableHead>OS</TableHead>
-                      <TableHead>Device</TableHead>
-                      <TableHead>Referer</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentItems.map((click, index) => {
-                      const { browser, os, device } = formatUserAgent(click.userAgent);
-                      return (
-                        <TableRow key={index}>
-                          <TableCell>{new Date(click.timestamp).toLocaleString()}</TableCell>
-                          <TableCell>{click.ip}</TableCell>
-                          <TableCell>
-                            <span className="flex items-center gap-2">
-                              {getBrowserIcon(browser)} {browser}
-                            </span>
-                          </TableCell>
-                          <TableCell>{os}</TableCell>
-                          <TableCell>
-                            <span className="flex items-center gap-2">
-                              {getDeviceIcon(device)} {device}
-                            </span>
-                          </TableCell>
-                          <TableCell>{formatReferrer(click.referer)}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+        <Card className="border-border/70">
+          <CardHeader>
+            <CardTitle>Click History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {sortedClickData.length === 0 ? (
+              <p className="py-8 text-center text-muted-foreground">
+                No clicks recorded yet.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-4 md:hidden">
+                  {currentItems.map((click, index) => {
+                    const { browser, os, device } = formatUserAgent(click.userAgent);
+                    return (
+                      <Card key={index}>
+                        <CardContent className="space-y-2 p-4 text-sm">
+                          <p>
+                            <span className="font-medium">Time:</span>{" "}
+                            {new Date(click.timestamp).toLocaleString()}
+                          </p>
+                          <p>
+                            <span className="font-medium">Browser:</span> {browser}
+                          </p>
+                          <p>
+                            <span className="font-medium">OS:</span> {os}
+                          </p>
+                          <p>
+                            <span className="font-medium">Device:</span> {device}
+                          </p>
+                          <p>
+                            <span className="font-medium">Referer:</span>{" "}
+                            {formatReferrer(click.referer)}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
 
-              {totalPages > 1 && (
-                <Pagination className="mt-6">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink
-                          onClick={() => setCurrentPage(i + 1)}
-                          isActive={currentPage === i + 1}
-                        >
-                          {i + 1}
-                        </PaginationLink>
+                <div className="hidden overflow-x-auto md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Timestamp</TableHead>
+                        <TableHead>IP</TableHead>
+                        <TableHead>Browser</TableHead>
+                        <TableHead>OS</TableHead>
+                        <TableHead>Device</TableHead>
+                        <TableHead>Referer</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentItems.map((click, index) => {
+                        const { browser, os, device } = formatUserAgent(click.userAgent);
+                        return (
+                          <TableRow key={index}>
+                            <TableCell>
+                              {new Date(click.timestamp).toLocaleString()}
+                            </TableCell>
+                            <TableCell>{click.ip}</TableCell>
+                            <TableCell>
+                              <span className="flex items-center gap-2">
+                                {getBrowserIcon(browser)} {browser}
+                              </span>
+                            </TableCell>
+                            <TableCell>{os}</TableCell>
+                            <TableCell>
+                              <span className="flex items-center gap-2">
+                                {getDeviceIcon(device)} {device}
+                              </span>
+                            </TableCell>
+                            <TableCell>{formatReferrer(click.referer)}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {totalPages > 1 && (
+                  <Pagination className="mt-6">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                        />
                       </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+                      {Array.from({ length: totalPages }, (_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(i + 1)}
+                            isActive={currentPage === i + 1}
+                          >
+                            {i + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            setCurrentPage((p) => Math.min(totalPages, p + 1))
+                          }
+                          disabled={currentPage === totalPages}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

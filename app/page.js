@@ -10,6 +10,11 @@ import {
   ArrowRight,
   Check,
 } from "lucide-react";
+import {
+  buildFaqPageSchema,
+  buildSoftwareApplicationSchema,
+  jsonLdScript,
+} from "@/lib/structuredData";
 
 const features = [
   {
@@ -86,7 +91,16 @@ const faqs = [
 
 export default function LandingPage() {
   return (
-    <div className="overflow-hidden">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(buildSoftwareApplicationSchema())}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(buildFaqPageSchema(faqs))}
+      />
+      <div className="overflow-hidden">
       {/* Hero */}
       <section className="relative">
         <div className="glow absolute inset-0 -z-10" aria-hidden="true" />
@@ -229,5 +243,6 @@ export default function LandingPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }

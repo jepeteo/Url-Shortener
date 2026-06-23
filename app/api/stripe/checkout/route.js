@@ -17,11 +17,15 @@ export async function POST(request) {
     );
   }
 
-  const { plan } = await request.json();
-  const priceId = getStripePriceId(plan);
+  const { plan, interval = "monthly" } = await request.json();
+  const billingInterval = interval === "annual" ? "annual" : "monthly";
+  const priceId = getStripePriceId(plan, billingInterval);
 
   if (!priceId) {
-    return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+    return NextResponse.json(
+      { error: "This plan or billing interval is not available." },
+      { status: 400 }
+    );
   }
 
   const checkoutSession = await stripe.checkout.sessions.create({
@@ -33,6 +37,7 @@ export async function POST(request) {
     metadata: {
       userId: session.user.id,
       plan,
+      interval: billingInterval,
     },
   });
 

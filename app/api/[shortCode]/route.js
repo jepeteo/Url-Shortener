@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
   const { shortCode } = await params;
 
   try {
-    const cached = getCachedRedirect(shortCode);
+    const cached = await getCachedRedirect(shortCode);
     if (cached) {
       recordClickAsync(
         { _id: cached.urlId, shortCode },
@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
     });
 
     if (urlEntry) {
-      setCachedRedirect(shortCode, urlEntry.originalUrl, urlEntry._id);
+      await setCachedRedirect(shortCode, urlEntry.originalUrl, urlEntry._id);
       recordClickAsync(urlEntry, request);
 
       const status = urlEntry.expiresAt === null ? 308 : 307;

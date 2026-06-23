@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { createShortUrl } from "@/lib/shorten";
 import { getUserByApiKey } from "@/lib/apiKeys";
 
@@ -14,7 +14,7 @@ export async function POST(request) {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "api";
 
-  if (!(await checkRateLimit(`api:${user._id.toString()}`, { limit: 60, windowMs: 60_000 }))) {
+  if (!(await checkRateLimit(`api:${user._id.toString()}`, RATE_LIMITS.apiV1))) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 

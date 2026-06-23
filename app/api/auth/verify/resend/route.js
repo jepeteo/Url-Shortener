@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import crypto from "crypto";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import clientPromise from "@/lib/mongodb";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { sendVerificationEmail } from "@/lib/email";
 import { ObjectId } from "mongodb";
 
@@ -34,7 +34,7 @@ export async function POST() {
     return NextResponse.json({ error: "No email on file" }, { status: 400 });
   }
 
-  if (!(await checkRateLimit(`verify-resend:${email}`, { limit: 3, windowMs: 3600_000 }))) {
+  if (!(await checkRateLimit(`verify-resend:${email}`, RATE_LIMITS.verifyResend))) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
       { status: 429 }

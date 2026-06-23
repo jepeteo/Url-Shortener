@@ -4,7 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import clientPromise from "../../../../lib/mongodb";
 import { compare } from "bcryptjs";
 import { ObjectId } from "mongodb";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .split(",")
@@ -33,7 +33,7 @@ export const authOptions = {
           return null;
         }
 
-        if (!(await checkRateLimit(`login:${email}`, { limit: 10, windowMs: 900_000 }))) {
+        if (!(await checkRateLimit(`login:${email}`, RATE_LIMITS.login))) {
           throw new Error("Too many login attempts. Please try again later.");
         }
 

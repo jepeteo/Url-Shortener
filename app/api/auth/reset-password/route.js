@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import crypto from "crypto";
 import { sendPasswordResetEmail } from "@/lib/email";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 export async function POST(request) {
   const { email } = await request.json();
@@ -13,7 +13,7 @@ export async function POST(request) {
 
   const normalizedEmail = email.toLowerCase().trim();
 
-  if (!(await checkRateLimit(`reset:${normalizedEmail}`, { limit: 3, windowMs: 3600_000 }))) {
+  if (!(await checkRateLimit(`reset:${normalizedEmail}`, RATE_LIMITS.resetPassword))) {
     return NextResponse.json({ message: "If an account exists, a reset link was sent." });
   }
 

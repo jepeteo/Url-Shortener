@@ -3,7 +3,7 @@ import clientPromise from "../../../lib/mongodb";
 import { hash } from "bcryptjs";
 import { ObjectId } from "mongodb";
 import crypto from "crypto";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { sendVerificationEmail } from "@/lib/email";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -13,7 +13,7 @@ export async function POST(request) {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
-  if (!(await checkRateLimit(`register:${ip}`, { limit: 5, windowMs: 60_000 }))) {
+  if (!(await checkRateLimit(`register:${ip}`, RATE_LIMITS.register))) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 

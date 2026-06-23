@@ -3,6 +3,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
+import { CookieConsent } from "@/components/CookieConsent";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -15,28 +17,33 @@ export const metadata = {
     icons: {
       icon: "/favicon.svg",
     },
+  keywords: [
+    "url shortener",
+    "short links",
+    "link analytics",
+    "qr codes",
+    "branded links",
+  ],
   openGraph: {
     title: "mikrouli.link — URL Shortener",
     description:
       "Shorten URLs, track clicks, and manage links with analytics and QR codes.",
     url: process.env.NEXT_PUBLIC_BASE_URL || "https://mikrouli.link",
     siteName: "mikrouli.link",
-    images: [
-      {
-        url: "/og-image.svg",
-        width: 1200,
-        height: 630,
-        alt: "mikrouli.link URL Shortener",
-      },
-    ],
     locale: "en_US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "mikrouli.link — URL Shortener",
+    description:
+      "Shorten URLs, track clicks, and manage links with analytics and QR codes.",
   },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} flex min-h-screen flex-col`}>
         <a
           href="#main-content"
@@ -46,10 +53,12 @@ export default function RootLayout({ children }) {
         </a>
         <Providers>
           <Header />
+          <VerifyEmailBanner />
           <main id="main-content" className="flex-1">
             {children}
           </main>
           <Footer />
+          <CookieConsent />
         </Providers>
         <Toaster richColors position="top-center" />
       </body>

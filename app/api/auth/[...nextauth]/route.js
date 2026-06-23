@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import clientPromise from "../../../../lib/mongodb";
 import { compare } from "bcryptjs";
 import { ObjectId } from "mongodb";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .split(",")
@@ -27,12 +28,19 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        const email = credentials.email?.toLowerCase().trim();
+        if (!email || !credentials.password) {
+          return null;
+        }
+
+        if (!(await checkRateLimit(`login:${email}`, { limit: 10, windowMs: 900_000 }))) {
+          throw new Error("Too many login attempts. Please try again later.");
+        }
+
         const client = await clientPromise;
         const usersCollection = client.db("urlShortener").collection("users");
 
-        const user = await usersCollection.findOne({
-          email: credentials.email,
-        });
+        const user = await usersCollection.findOne({ email });
         if (user && (await compare(credentials.password, user.password))) {
           return {
             id: user._id.toString(),
@@ -66,11 +74,18 @@ export const authOptions = {
             email: user.email,
             githubId: account.providerAccountId,
             plan: "free",
+            emailVerified: new Date(),
             createdAt: new Date(),
           });
           user.id = result.insertedId.toString();
         } else {
           user.id = existingUser._id.toString();
+          if (!existingUser.emailVerified) {
+            await usersCollection.updateOne(
+              { _id: existingUser._id },
+              { $set: { emailVerified: new Date() } }
+            );
+          }
         }
         return true;
       }

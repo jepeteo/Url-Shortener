@@ -2,25 +2,35 @@ import { NextResponse } from "next/server";
 import clientPromise from "../../../lib/mongodb";
 import { hash } from "bcryptjs";
 import { ObjectId } from "mongodb";
+import crypto from "crypto";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { sendVerificationEmail } from "@/lib/email";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(request) {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
-  if (!checkRateLimit(`register:${ip}`, { limit: 5, windowMs: 60_000 })) {
+  if (!(await checkRateLimit(`register:${ip}`, { limit: 5, windowMs: 60_000 }))) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
   const { name, email, password } = await request.json();
 
-  if (!name || !email || !password) {
+  const trimmedName = typeof name === "string" ? name.trim() : "";
+  const normalizedEmail = email?.toLowerCase().trim();
+
+  if (!trimmedName || !normalizedEmail || !password) {
     return NextResponse.json({ error: "All fields are required" }, { status: 400 });
   }
 
-  if (!EMAIL_REGEX.test(email)) {
+  if (trimmedName.length > 100) {
+    return NextResponse.json({ error: "Name must be 100 characters or less" }, { status: 400 });
+  }
+
+  if (!EMAIL_REGEX.test(normalizedEmail)) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
@@ -35,25 +45,37 @@ export async function POST(request) {
   const db = client.db("urlShortener");
 
   const existingUser = await db.collection("users").findOne({
-    email: email.toLowerCase().trim(),
+    email: normalizedEmail,
   });
   if (existingUser) {
     return NextResponse.json({ error: "Email already exists" }, { status: 400 });
   }
 
   const hashedPassword = await hash(password, 12);
+  const verificationToken = crypto.randomBytes(20).toString("hex");
+  const verificationExpires = Date.now() + VERIFICATION_TTL_MS;
 
   const result = await db.collection("users").insertOne({
     _id: new ObjectId(),
-    name,
-    email: email.toLowerCase().trim(),
+    name: trimmedName,
+    email: normalizedEmail,
     password: hashedPassword,
     plan: "free",
+    emailVerified: null,
+    verificationToken,
+    verificationExpires,
     createdAt: new Date(),
   });
 
+  const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?token=${verificationToken}`;
+  try {
+    await sendVerificationEmail({ email: normalizedEmail, verifyUrl });
+  } catch (error) {
+    console.error("Failed to send verification email:", error);
+  }
+
   return NextResponse.json({
-    message: "User created successfully",
+    message: "User created successfully. Check your email to verify your account.",
     userId: result.insertedId,
   });
 }

@@ -27,20 +27,21 @@ export default function Register() {
 
     const data = await response.json();
     if (response.ok) {
-      router.push("/auth/signin");
+      router.push("/auth/signin?registered=1");
     } else {
       setError(data.error || "An error occurred during registration");
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24">
-      <Card className="w-full max-w-md bg-card">
+    <div className="relative flex min-h-[70vh] flex-col items-center justify-center p-4 md:min-h-[82vh] md:p-24">
+      <div className="glow absolute inset-0 -z-10" aria-hidden="true" />
+      <Card className="w-full max-w-md border-border/70 shadow-xl shadow-primary/5">
         <CardHeader className="text-center">
-          <Link href="/" className="text-2xl font-bold">
+          <Link href="/" className="text-2xl font-bold gradient-text">
             mikrouli.link
           </Link>
-          <CardTitle className="mt-2 text-xl">Register</CardTitle>
+          <CardTitle className="mt-2 text-xl">Create your account</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -77,8 +78,19 @@ export default function Register() {
               </Alert>
             )}
             <Button type="submit" className="w-full">
-              Register
+              Create account
             </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              By creating an account you agree to our{" "}
+              <Link href="/terms" className="text-primary hover:underline">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="text-primary hover:underline">
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </form>
         </CardContent>
         <CardFooter className="justify-center">

@@ -17,5 +17,6 @@ export async function GET() {
     count: usage.count ?? 0,
     limit: usage.limit ?? plan.linksPerMonth,
     allowed: usage.allowed,
+    verified: Boolean(user.emailVerified),
   });
 }

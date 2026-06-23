@@ -5,6 +5,18 @@ import bcrypt from "bcryptjs";
 
 export async function POST(request) {
   const { token, password } = await request.json();
+
+  if (!token || typeof token !== "string") {
+    return NextResponse.json({ error: "Password reset token is invalid or has expired" }, { status: 400 });
+  }
+
+  if (!password || typeof password !== "string" || password.length < 8) {
+    return NextResponse.json(
+      { error: "Password must be at least 8 characters" },
+      { status: 400 }
+    );
+  }
+
   const client = await clientPromise;
   const db = client.db("urlShortener");
 

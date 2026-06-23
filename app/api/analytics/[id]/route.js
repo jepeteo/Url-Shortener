@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { assertUrlOwner } from "@/lib/auth";
+import { isValidObjectId } from "@/lib/validation";
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions);
@@ -12,6 +13,11 @@ export async function GET(request, { params }) {
   }
 
   const { id } = await params;
+
+  if (!isValidObjectId(id)) {
+    return NextResponse.json({ error: "Invalid URL id" }, { status: 400 });
+  }
+
   const ownership = await assertUrlOwner(id, session.user.id);
   if (ownership.error) {
     return NextResponse.json({ error: ownership.error }, { status: ownership.status });

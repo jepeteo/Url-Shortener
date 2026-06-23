@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import clientPromise from "../../../../lib/mongodb";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { ObjectId } from "mongodb";
+import { isValidObjectId } from "@/lib/validation";
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions);
@@ -10,6 +11,10 @@ export async function GET(request, { params }) {
 
   if (!session) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!isValidObjectId(id)) {
+    return NextResponse.json({ error: "Invalid URL id" }, { status: 400 });
   }
 
   const client = await clientPromise;
@@ -33,6 +38,10 @@ export async function DELETE(request, { params }) {
 
   if (!session) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!isValidObjectId(id)) {
+    return NextResponse.json({ error: "Invalid URL id" }, { status: 400 });
   }
 
   const client = await clientPromise;

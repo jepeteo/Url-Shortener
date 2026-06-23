@@ -20,11 +20,24 @@ export async function POST(request) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (error) {
-    return NextResponse.json({ error: `Webhook error: ${error.message}` }, { status: 400 });
+    console.error("Stripe webhook signature verification failed:", error);
+    return NextResponse.json({ error: "Webhook signature verification failed" }, { status: 400 });
   }
 
   const client = await clientPromise;
   const db = client.db("urlShortener");
+
+  // Idempotency: ignore events we've already processed.
+  try {
+    await db
+      .collection("stripeEvents")
+      .insertOne({ _id: event.id, type: event.type, receivedAt: new Date() });
+  } catch (error) {
+    if (error.code === 11000) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    throw error;
+  }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
@@ -37,6 +50,7 @@ export async function POST(request) {
         {
           $set: {
             plan,
+            paymentStatus: "active",
             stripeCustomerId: session.customer,
             stripeSubscriptionId: session.subscription,
           },
@@ -58,8 +72,18 @@ export async function POST(request) {
 
     await db.collection("users").updateOne(
       { stripeSubscriptionId: subscription.id },
-      { $set: { plan } }
+      { $set: { plan, paymentStatus: subscription.status || "active" } }
     );
+  }
+
+  if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object;
+    if (invoice.customer) {
+      await db.collection("users").updateOne(
+        { stripeCustomerId: invoice.customer },
+        { $set: { paymentStatus: "past_due" } }
+      );
+    }
   }
 
   return NextResponse.json({ received: true });

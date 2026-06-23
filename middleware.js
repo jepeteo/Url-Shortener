@@ -8,6 +8,8 @@ const RESERVED_PATHS = new Set([
   "analytics",
   "pricing",
   "admin",
+  "terms",
+  "privacy",
   "link-not-found",
   "favicon.ico",
   "robots.txt",

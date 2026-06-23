@@ -14,7 +14,7 @@ export async function POST(request) {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "api";
 
-  if (!checkRateLimit(`api:${user._id.toString()}`, { limit: 60, windowMs: 60_000 })) {
+  if (!(await checkRateLimit(`api:${user._id.toString()}`, { limit: 60, windowMs: 60_000 }))) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 

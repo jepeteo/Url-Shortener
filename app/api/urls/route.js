@@ -6,7 +6,8 @@ import { authOptions } from "../auth/[...nextauth]/route";
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page"), 10) || 1;
-  const limit = parseInt(searchParams.get("limit"), 10) || 10;
+  const rawLimit = parseInt(searchParams.get("limit"), 10) || 10;
+  const limit = Math.min(Math.max(1, rawLimit), 100);
 
   const session = await getServerSession(authOptions);
 

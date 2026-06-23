@@ -14,7 +14,7 @@ export async function POST(request) {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "api";
 
-  if (!(await checkRateLimit(`api:${user._id.toString()}`, RATE_LIMITS.apiV1))) {
+  if (!(await checkRateLimit(`api:${user.id}`, RATE_LIMITS.apiV1))) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
@@ -22,7 +22,7 @@ export async function POST(request) {
   const result = await createShortUrl({
     originalUrl: body.url,
     user: {
-      id: user._id.toString(),
+      id: user.id,
       plan: user.plan || "business",
     },
     alias: body.alias,

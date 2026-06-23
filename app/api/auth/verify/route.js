@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import { and, eq, gt } from "drizzle-orm";
+import { getDb, users } from "@/lib/db";
 
 export async function GET(request) {
   const token = request.nextUrl.searchParams.get("token");
@@ -10,12 +11,12 @@ export async function GET(request) {
     );
   }
 
-  const client = await clientPromise;
-  const db = client.db("urlShortener");
-
-  const user = await db.collection("users").findOne({
-    verificationToken: token,
-    verificationExpires: { $gt: Date.now() },
+  const db = getDb();
+  const user = await db.query.users.findFirst({
+    where: and(
+      eq(users.verificationToken, token),
+      gt(users.verificationExpires, Date.now())
+    ),
   });
 
   if (!user) {
@@ -24,13 +25,14 @@ export async function GET(request) {
     );
   }
 
-  await db.collection("users").updateOne(
-    { _id: user._id },
-    {
-      $set: { emailVerified: new Date() },
-      $unset: { verificationToken: "", verificationExpires: "" },
-    }
-  );
+  await db
+    .update(users)
+    .set({
+      emailVerified: new Date(),
+      verificationToken: null,
+      verificationExpires: null,
+    })
+    .where(eq(users.id, user.id));
 
   return NextResponse.redirect(new URL("/dashboard?verified=1", request.url));
 }

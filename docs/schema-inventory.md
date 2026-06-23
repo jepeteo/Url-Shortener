@@ -1,31 +1,30 @@
-# Schema inventory (MongoDB → Neon migration reference)
+# Schema inventory (Neon Postgres / Drizzle)
 
-Current database: `urlShortener` on MongoDB. This document maps collections and fields
-for the upcoming Neon Postgres migration.
+Source of truth: [`db/schema.js`](../db/schema.js). Database: Neon Postgres.
 
 ## `users`
 
 Authentication, billing, and API key storage.
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `_id` | ObjectId | Primary key → migrate to `uuid` |
-| `name` | string | Display name, max 100 chars |
-| `email` | string | Unique, lowercase |
-| `password` | string | bcrypt hash (credentials only) |
-| `githubId` | string | GitHub OAuth provider id |
-| `plan` | string | `free`, `pro`, or `business` |
-| `emailVerified` | Date \| null | null = unverified |
-| `verificationToken` | string | Email verification token |
-| `verificationExpires` | number | Token expiry timestamp (ms) |
-| `resetToken` | string | Password reset token |
-| `resetExpires` | number | Reset token expiry timestamp (ms) |
-| `stripeCustomerId` | string | Stripe customer id |
-| `stripeSubscriptionId` | string | Stripe subscription id |
-| `paymentStatus` | string | e.g. `active`, `past_due` |
-| `apiKeyHash` | string | SHA-256 hash of API key |
-| `apiKeyCreatedAt` | Date | When current API key was generated |
-| `createdAt` | Date | Account creation |
+| Column (DB) | Drizzle field | Type | Notes |
+|-------------|---------------|------|-------|
+| `id` | `id` | uuid PK | Auto-generated |
+| `name` | `name` | text | Display name, max 100 chars |
+| `email` | `email` | text | Unique, lowercase |
+| `password` | `password` | text | bcrypt hash (credentials only) |
+| `github_id` | `githubId` | text | GitHub OAuth provider id |
+| `plan` | `plan` | text | `free`, `pro`, or `business` |
+| `email_verified` | `emailVerified` | timestamptz | null = unverified |
+| `verification_token` | `verificationToken` | text | Email verification token |
+| `verification_expires` | `verificationExpires` | bigint | Token expiry timestamp (ms) |
+| `reset_password_token` | `resetPasswordToken` | text | Password reset token |
+| `reset_password_expires` | `resetPasswordExpires` | bigint | Reset token expiry (ms) |
+| `stripe_customer_id` | `stripeCustomerId` | text | Stripe customer id |
+| `stripe_subscription_id` | `stripeSubscriptionId` | text | Stripe subscription id |
+| `payment_status` | `paymentStatus` | text | e.g. `active`, `past_due` |
+| `api_key_hash` | `apiKeyHash` | text | SHA-256 hash of API key |
+| `api_key_created_at` | `apiKeyCreatedAt` | timestamptz | When current API key was generated |
+| `created_at` | `createdAt` | timestamptz | Account creation |
 
 **Indexes:** unique on `email`
 
@@ -33,81 +32,62 @@ Authentication, billing, and API key storage.
 
 Short link records.
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `_id` | ObjectId | Primary key → migrate to `uuid` |
-| `originalUrl` | string | Destination URL (validated) |
-| `shortCode` | string | Unique slug, 3–32 chars |
-| `userId` | string \| null | Owner user id as string, null if anonymous |
-| `isAnonymous` | boolean | Whether link was created without auth |
-| `claimedAt` | Date | When anonymous link was claimed |
-| `clicks` | number | Denormalized click counter |
-| `lastClickedAt` | Date \| null | Last click timestamp |
-| `expiresAt` | Date \| null | null = never expires |
-| `createdAt` | Date | Link creation |
+| Column (DB) | Drizzle field | Type | Notes |
+|-------------|---------------|------|-------|
+| `id` | `id` | uuid PK | Auto-generated |
+| `original_url` | `originalUrl` | text | Destination URL (validated) |
+| `short_code` | `shortCode` | text | Unique slug, 3–32 chars |
+| `user_id` | `userId` | uuid FK | Owner, null if anonymous |
+| `is_anonymous` | `isAnonymous` | boolean | Created without auth |
+| `claimed_at` | `claimedAt` | timestamptz | When anonymous link was claimed |
+| `clicks` | `clicks` | integer | Denormalized click counter |
+| `last_clicked_at` | `lastClickedAt` | timestamptz | Last click timestamp |
+| `expires_at` | `expiresAt` | timestamptz | null = never expires |
+| `created_at` | `createdAt` | timestamptz | Link creation |
 
 **Indexes:**
 
-- unique on `shortCode`
-- compound on `userId` + `createdAt` (desc)
-- compound on `shortCode` + `expiresAt`
-- TTL on `expiresAt` (Postgres: replace with cron cleanup job)
+- unique on `short_code`
+- compound on `user_id` + `created_at`
+- compound on `short_code` + `expires_at`
+
+Expired links are removed by the daily cron job at `/api/cron/cleanup-expired`.
 
 ## `clicks`
 
 Per-click analytics events.
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `_id` | ObjectId | Primary key → migrate to `uuid` |
-| `urlId` | ObjectId | Reference to `urls._id` |
-| `shortCode` | string | Denormalized for queries |
-| `timestamp` | Date | Click time |
-| `ip` | string | Anonymized (/24 IPv4, /48 IPv6) |
-| `userAgent` | string | Raw user agent (bots filtered) |
-| `referer` | string \| null | HTTP referer header |
+| Column (DB) | Drizzle field | Type | Notes |
+|-------------|---------------|------|-------|
+| `id` | `id` | uuid PK | Auto-generated |
+| `url_id` | `urlId` | uuid FK | References `urls.id` (cascade delete) |
+| `short_code` | `shortCode` | text | Denormalized for queries |
+| `timestamp` | `timestamp` | timestamptz | Click time |
+| `ip` | `ip` | text | Anonymized (/24 IPv4, /48 IPv6) |
+| `user_agent` | `userAgent` | text | Raw user agent (bots filtered) |
+| `referer` | `referer` | text | HTTP referer header |
 
-**Indexes:** compound on `urlId` + `timestamp` (desc); compound on `shortCode` + `timestamp` (desc)
+**Indexes:** compound on `url_id` + `timestamp`; compound on `short_code` + `timestamp`
 
-## `stripeEvents`
+## `stripe_events`
 
 Webhook idempotency log.
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `_id` | string | Stripe event id (used as primary key) |
-| `type` | string | Event type |
-| `receivedAt` | Date | Processing timestamp |
+| Column (DB) | Drizzle field | Type | Notes |
+|-------------|---------------|------|-------|
+| `id` | `id` | text PK | Stripe event id |
+| `type` | `type` | text | Event type |
+| `received_at` | `receivedAt` | timestamptz | Processing timestamp |
 
-**Indexes:** `_id` is unique by design (duplicate insert = 11000 error)
+Duplicate inserts raise Postgres unique violation (`23505`) and are ignored.
 
-## Suggested Postgres tables
+## Data access layer
 
-```
-users (id uuid PK, ...)
-urls (id uuid PK, user_id uuid FK nullable, short_code text UNIQUE, ...)
-clicks (id uuid PK, url_id uuid FK, ...)
-stripe_events (id text PK, ...)
-```
+- Connection: [`lib/db.js`](../lib/db.js) (`getDb()`, Neon HTTP driver)
+- Validation: [`lib/validation.js`](../lib/validation.js) (`isValidUuid`)
+- Migrations: `npm run db:push` or `npm run db:migrate` (see [`drizzle.config.js`](../drizzle.config.js))
 
-## Files to rewrite during migration
-
-All files importing from `lib/mongodb.js` or using `ObjectId`:
-
-- `lib/auth.js`, `lib/shorten.js`, `lib/usage.js`, `lib/clickTracking.js`, `lib/apiKeys.js`, `lib/userUtils.js`
-- `app/api/auth/[...nextauth]/route.js` and auth sub-routes
-- `app/api/shorten/route.js`, `app/api/v1/shorten/route.js`
-- `app/api/urls/route.js`, `app/api/urls/[id]/route.js`
-- `app/api/analytics/[id]/route.js`, `app/api/claim/route.js`
-- `app/api/register/route.js`, `app/api/api-keys/route.js`
-- `app/api/stripe/webhook/route.js`, `app/api/stripe/portal/route.js`
-- `app/api/admin/route.js`, `app/api/[shortCode]/route.js`
-- `scripts/seed-demo.js`, `scripts/create-indexes.js`, `scripts/migrate-email-verified.js`
-- `lib/validation.js` (`isValidObjectId` → UUID validation)
-
-## Stack-agnostic features (no rewrite needed)
-
-These survive migration as-is:
+## Stack-agnostic features (unchanged by DB migration)
 
 - Upstash Redis rate limiting (`lib/rateLimit.js`, `lib/upstash.js`)
 - Upstash redirect cache (`lib/redirectCache.js`)

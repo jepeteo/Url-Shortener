@@ -3,19 +3,11 @@
 This document tracks features that are planned or coming soon to mikrouli.link.
 Items are grouped by priority, not committed dates.
 
-## Neon migration (next infrastructure step)
+## Recently shipped
 
-Before building DB-heavy features, migrate from MongoDB to Neon Postgres:
+See [CHANGELOG.md](CHANGELOG.md) for shipped features, including:
 
-- Define Drizzle (or Prisma) schema from [docs/schema-inventory.md](docs/schema-inventory.md)
-- Rewrite ~25 MongoDB call sites across API routes and libs
-- Replace MongoDB TTL index on `urls.expiresAt` with a scheduled cleanup job
-- Re-seed demo data for Postgres
-- Remove `mongodb` dependency after migration is complete
-
-See [docs/schema-inventory.md](docs/schema-inventory.md) for the current data model.
-
-## Coming soon (next up)
+- Neon Postgres migration with Drizzle ORM (replaces MongoDB)
 
 - **Custom domains** — bring your own branded domain for short links (Business plan).
   Already referenced on the pricing page as "coming soon".

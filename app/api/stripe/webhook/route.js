@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { getStripe, getPlanFromPriceId } from "@/lib/stripe";
-import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { getDb, stripeEvents, users, isUniqueViolation } from "@/lib/db";
 
 export async function POST(request) {
   const stripe = getStripe();
@@ -24,16 +24,15 @@ export async function POST(request) {
     return NextResponse.json({ error: "Webhook signature verification failed" }, { status: 400 });
   }
 
-  const client = await clientPromise;
-  const db = client.db("urlShortener");
+  const db = getDb();
 
-  // Idempotency: ignore events we've already processed.
   try {
-    await db
-      .collection("stripeEvents")
-      .insertOne({ _id: event.id, type: event.type, receivedAt: new Date() });
+    await db.insert(stripeEvents).values({
+      id: event.id,
+      type: event.type,
+    });
   } catch (error) {
-    if (error.code === 11000) {
+    if (isUniqueViolation(error)) {
       return NextResponse.json({ received: true, duplicate: true });
     }
     throw error;
@@ -45,17 +44,15 @@ export async function POST(request) {
     const plan = session.metadata?.plan || "pro";
 
     if (userId) {
-      await db.collection("users").updateOne(
-        { _id: new ObjectId(userId) },
-        {
-          $set: {
-            plan,
-            paymentStatus: "active",
-            stripeCustomerId: session.customer,
-            stripeSubscriptionId: session.subscription,
-          },
-        }
-      );
+      await db
+        .update(users)
+        .set({
+          plan,
+          paymentStatus: "active",
+          stripeCustomerId: session.customer,
+          stripeSubscriptionId: session.subscription,
+        })
+        .where(eq(users.id, userId));
     }
   }
 
@@ -70,19 +67,19 @@ export async function POST(request) {
         ? "free"
         : getPlanFromPriceId(priceId);
 
-    await db.collection("users").updateOne(
-      { stripeSubscriptionId: subscription.id },
-      { $set: { plan, paymentStatus: subscription.status || "active" } }
-    );
+    await db
+      .update(users)
+      .set({ plan, paymentStatus: subscription.status || "active" })
+      .where(eq(users.stripeSubscriptionId, subscription.id));
   }
 
   if (event.type === "invoice.payment_failed") {
     const invoice = event.data.object;
     if (invoice.customer) {
-      await db.collection("users").updateOne(
-        { stripeCustomerId: invoice.customer },
-        { $set: { paymentStatus: "past_due" } }
-      );
+      await db
+        .update(users)
+        .set({ paymentStatus: "past_due" })
+        .where(eq(users.stripeCustomerId, invoice.customer));
     }
   }
 

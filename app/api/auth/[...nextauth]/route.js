@@ -1,9 +1,9 @@
 import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
-import clientPromise from "../../../../lib/mongodb";
 import { compare } from "bcryptjs";
-import { ObjectId } from "mongodb";
+import { eq } from "drizzle-orm";
+import { getDb, users } from "@/lib/db";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
@@ -37,13 +37,14 @@ export const authOptions = {
           throw new Error("Too many login attempts. Please try again later.");
         }
 
-        const client = await clientPromise;
-        const usersCollection = client.db("urlShortener").collection("users");
+        const db = getDb();
+        const user = await db.query.users.findFirst({
+          where: eq(users.email, email),
+        });
 
-        const user = await usersCollection.findOne({ email });
-        if (user && (await compare(credentials.password, user.password))) {
+        if (user?.password && (await compare(credentials.password, user.password))) {
           return {
-            id: user._id.toString(),
+            id: user.id,
             name: user.name,
             email: user.email,
             plan: user.plan || "free",
@@ -60,31 +61,30 @@ export const authOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "github") {
-        const client = await clientPromise;
-        const db = client.db("urlShortener");
-        const usersCollection = db.collection("users");
-
-        const existingUser = await usersCollection.findOne({
-          email: user.email,
+        const db = getDb();
+        const existingUser = await db.query.users.findFirst({
+          where: eq(users.email, user.email),
         });
 
         if (!existingUser) {
-          const result = await usersCollection.insertOne({
-            name: user.name,
-            email: user.email,
-            githubId: account.providerAccountId,
-            plan: "free",
-            emailVerified: new Date(),
-            createdAt: new Date(),
-          });
-          user.id = result.insertedId.toString();
+          const [created] = await db
+            .insert(users)
+            .values({
+              name: user.name,
+              email: user.email,
+              githubId: account.providerAccountId,
+              plan: "free",
+              emailVerified: new Date(),
+            })
+            .returning({ id: users.id });
+          user.id = created.id;
         } else {
-          user.id = existingUser._id.toString();
+          user.id = existingUser.id;
           if (!existingUser.emailVerified) {
-            await usersCollection.updateOne(
-              { _id: existingUser._id },
-              { $set: { emailVerified: new Date() } }
-            );
+            await db
+              .update(users)
+              .set({ emailVerified: new Date() })
+              .where(eq(users.id, existingUser.id));
           }
         }
         return true;

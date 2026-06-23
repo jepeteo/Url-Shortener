@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import crypto from "crypto";
+import { eq } from "drizzle-orm";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import clientPromise from "@/lib/mongodb";
+import { getDb, users } from "@/lib/db";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { sendVerificationEmail } from "@/lib/email";
-import { ObjectId } from "mongodb";
 
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -15,10 +15,9 @@ export async function POST() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const client = await clientPromise;
-  const db = client.db("urlShortener");
-  const user = await db.collection("users").findOne({
-    _id: new ObjectId(session.user.id),
+  const db = getDb();
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
   });
 
   if (!user) {
@@ -44,10 +43,10 @@ export async function POST() {
   const verificationToken = crypto.randomBytes(20).toString("hex");
   const verificationExpires = Date.now() + VERIFICATION_TTL_MS;
 
-  await db.collection("users").updateOne(
-    { _id: user._id },
-    { $set: { verificationToken, verificationExpires } }
-  );
+  await db
+    .update(users)
+    .set({ verificationToken, verificationExpires })
+    .where(eq(users.id, user.id));
 
   const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?token=${verificationToken}`;
   await sendVerificationEmail({ email, verifyUrl });

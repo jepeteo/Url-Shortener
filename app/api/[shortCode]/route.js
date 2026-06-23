@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import clientPromise from "../../../lib/mongodb";
+import { and, eq, gt, isNull, or } from "drizzle-orm";
+import { getDb, urls } from "@/lib/db";
 import { recordClickAsync } from "@/lib/clickTracking";
 import {
   getCachedRedirect,
@@ -12,23 +13,22 @@ export async function GET(request, { params }) {
   try {
     const cached = await getCachedRedirect(shortCode);
     if (cached) {
-      recordClickAsync(
-        { _id: cached.urlId, shortCode },
-        request
-      );
+      recordClickAsync({ id: cached.urlId, shortCode }, request);
       return NextResponse.redirect(cached.originalUrl, 307);
     }
 
-    const client = await clientPromise;
-    const db = client.db("urlShortener");
+    const db = getDb();
+    const now = new Date();
 
-    const urlEntry = await db.collection("urls").findOne({
-      shortCode,
-      $or: [{ expiresAt: { $gt: new Date() } }, { expiresAt: null }],
+    const urlEntry = await db.query.urls.findFirst({
+      where: and(
+        eq(urls.shortCode, shortCode),
+        or(gt(urls.expiresAt, now), isNull(urls.expiresAt))
+      ),
     });
 
     if (urlEntry) {
-      await setCachedRedirect(shortCode, urlEntry.originalUrl, urlEntry._id);
+      await setCachedRedirect(shortCode, urlEntry.originalUrl, urlEntry.id);
       recordClickAsync(urlEntry, request);
 
       const status = urlEntry.expiresAt === null ? 308 : 307;

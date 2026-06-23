@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
 import crypto from "crypto";
+import { eq } from "drizzle-orm";
+import { getDb, users } from "@/lib/db";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
@@ -17,24 +18,21 @@ export async function POST(request) {
     return NextResponse.json({ message: "If an account exists, a reset link was sent." });
   }
 
-  const client = await clientPromise;
-  const db = client.db("urlShortener");
-
+  const db = getDb();
   const resetToken = crypto.randomBytes(20).toString("hex");
   const resetTokenExpires = Date.now() + 3600000;
 
   try {
-    const result = await db.collection("users").updateOne(
-      { email: normalizedEmail },
-      {
-        $set: {
-          resetPasswordToken: resetToken,
-          resetPasswordExpires: resetTokenExpires,
-        },
-      }
-    );
+    const updated = await db
+      .update(users)
+      .set({
+        resetPasswordToken: resetToken,
+        resetPasswordExpires: resetTokenExpires,
+      })
+      .where(eq(users.email, normalizedEmail))
+      .returning({ id: users.id });
 
-    if (result.matchedCount > 0) {
+    if (updated.length > 0) {
       const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password/${resetToken}`;
       await sendPasswordResetEmail({ email: normalizedEmail, resetUrl });
     }

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import clientPromise from "../../../lib/mongodb";
 import { hash } from "bcryptjs";
-import { ObjectId } from "mongodb";
 import crypto from "crypto";
+import { eq } from "drizzle-orm";
+import { getDb, users } from "@/lib/db";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { sendVerificationEmail } from "@/lib/email";
 
@@ -41,12 +41,11 @@ export async function POST(request) {
     );
   }
 
-  const client = await clientPromise;
-  const db = client.db("urlShortener");
-
-  const existingUser = await db.collection("users").findOne({
-    email: normalizedEmail,
+  const db = getDb();
+  const existingUser = await db.query.users.findFirst({
+    where: eq(users.email, normalizedEmail),
   });
+
   if (existingUser) {
     return NextResponse.json({ error: "Email already exists" }, { status: 400 });
   }
@@ -55,17 +54,18 @@ export async function POST(request) {
   const verificationToken = crypto.randomBytes(20).toString("hex");
   const verificationExpires = Date.now() + VERIFICATION_TTL_MS;
 
-  const result = await db.collection("users").insertOne({
-    _id: new ObjectId(),
-    name: trimmedName,
-    email: normalizedEmail,
-    password: hashedPassword,
-    plan: "free",
-    emailVerified: null,
-    verificationToken,
-    verificationExpires,
-    createdAt: new Date(),
-  });
+  const [user] = await db
+    .insert(users)
+    .values({
+      name: trimmedName,
+      email: normalizedEmail,
+      password: hashedPassword,
+      plan: "free",
+      emailVerified: null,
+      verificationToken,
+      verificationExpires,
+    })
+    .returning({ id: users.id });
 
   const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?token=${verificationToken}`;
   try {
@@ -76,6 +76,6 @@ export async function POST(request) {
 
   return NextResponse.json({
     message: "User created successfully. Check your email to verify your account.",
-    userId: result.insertedId,
+    userId: user.id,
   });
 }

@@ -1,16 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const mockInsertOne = vi.fn();
+const mockInsert = vi.fn();
 const mockDb = {
-  collection: vi.fn(() => ({
-    insertOne: mockInsertOne,
+  insert: vi.fn(() => ({
+    values: vi.fn().mockImplementation(() => mockInsert()),
   })),
 };
 
-vi.mock("../lib/mongodb", () => ({
-  default: Promise.resolve({
-    db: () => mockDb,
-  }),
+vi.mock("../lib/db", () => ({
+  getDb: () => mockDb,
+  urls: {},
+  isUniqueViolation: (error) => error?.code === "23505",
 }));
 
 vi.mock("../lib/usage", () => ({
@@ -19,7 +19,7 @@ vi.mock("../lib/usage", () => ({
 
 describe("createShortUrl", () => {
   beforeEach(() => {
-    mockInsertOne.mockReset();
+    mockInsert.mockReset();
     process.env.NEXT_PUBLIC_BASE_URL = "http://localhost:3000";
   });
 
@@ -53,7 +53,7 @@ describe("createShortUrl", () => {
   });
 
   it("creates a short URL for valid input", async () => {
-    mockInsertOne.mockResolvedValue({ insertedId: "abc" });
+    mockInsert.mockResolvedValue(undefined);
     const { createShortUrl } = await import("../lib/shorten");
     const result = await createShortUrl({
       originalUrl: "https://example.com",
@@ -61,11 +61,11 @@ describe("createShortUrl", () => {
     });
     expect(result.shortCode).toBeTruthy();
     expect(result.shortUrl).toContain("http://localhost:3000/");
-    expect(mockInsertOne).toHaveBeenCalledOnce();
+    expect(mockInsert).toHaveBeenCalledOnce();
   });
 
   it("returns conflict when alias is taken", async () => {
-    mockInsertOne.mockRejectedValue({ code: 11000 });
+    mockInsert.mockRejectedValue({ code: "23505" });
     const { createShortUrl } = await import("../lib/shorten");
     const result = await createShortUrl({
       originalUrl: "https://example.com",

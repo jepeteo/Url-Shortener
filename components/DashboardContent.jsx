@@ -181,7 +181,7 @@ export default function DashboardContent({
     });
   }, [urls, sortMethod]);
 
-  const qrCode = showQR ? urls.find((u) => u._id === showQR)?.shortCode : null;
+  const qrCode = showQR ? urls.find((u) => u.id === showQR)?.shortCode : null;
 
   if (isLoading) {
     return <p className="text-muted-foreground">Loading your links...</p>;
@@ -282,7 +282,7 @@ export default function DashboardContent({
               const shortLink = `${process.env.NEXT_PUBLIC_BASE_URL}/${url.shortCode}`;
               return (
                 <TableRow
-                  key={url._id}
+                  key={url.id}
                   className="my-4 flex flex-col rounded-xl border bg-card p-6 text-card-foreground shadow md:table-row md:gap-4 md:border-none md:p-0 md:shadow-none"
                 >
                   <TableCell className="break-all">
@@ -326,14 +326,14 @@ export default function DashboardContent({
                       className="text-primary hover:bg-accent hover:text-accent-foreground"
                     >
                       <Link
-                        href={`/analytics/${url._id}`}
+                        href={`/analytics/${url.id}`}
                         aria-label={`View analytics for URL ${url.shortCode}`}
                       >
                         <BarChart2 className="h-4 w-4" />
                       </Link>
                     </Button>
                     <Button
-                      onClick={() => setShowQR(url._id)}
+                      onClick={() => setShowQR(url.id)}
                       variant="outline"
                       size="icon"
                       className="text-primary hover:bg-accent hover:text-accent-foreground"
@@ -342,7 +342,7 @@ export default function DashboardContent({
                       <QrCode className="h-4 w-4" />
                     </Button>
                     <Button
-                      onClick={() => handleRemove(url._id, url.shortCode)}
+                      onClick={() => handleRemove(url.id, url.shortCode)}
                       variant="outline"
                       size="icon"
                       className="text-destructive hover:bg-destructive hover:text-destructive-foreground"

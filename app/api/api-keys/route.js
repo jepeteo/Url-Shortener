@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
+import { eq } from "drizzle-orm";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { getDb, users } from "@/lib/db";
 import { generateApiKey, hashApiKey } from "@/lib/apiKeys";
 import { getPlan } from "@/lib/plans";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
@@ -22,10 +22,9 @@ export async function POST(request) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
-  const client = await clientPromise;
-  const db = client.db("urlShortener");
-  const user = await db.collection("users").findOne({
-    _id: new ObjectId(session.user.id),
+  const db = getDb();
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
   });
 
   const plan = getPlan(user?.plan || "free");
@@ -37,10 +36,10 @@ export async function POST(request) {
   }
 
   const apiKey = generateApiKey();
-  await db.collection("users").updateOne(
-    { _id: user._id },
-    { $set: { apiKeyHash: hashApiKey(apiKey), apiKeyCreatedAt: new Date() } }
-  );
+  await db
+    .update(users)
+    .set({ apiKeyHash: hashApiKey(apiKey), apiKeyCreatedAt: new Date() })
+    .where(eq(users.id, user.id));
 
   return NextResponse.json({
     apiKey,

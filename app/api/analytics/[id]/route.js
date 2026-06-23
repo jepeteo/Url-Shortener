@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { getDatabase } from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { desc, eq } from "drizzle-orm";
+import { getDb, clicks } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { assertUrlOwner } from "@/lib/auth";
-import { isValidObjectId } from "@/lib/validation";
+import { isValidUuid } from "@/lib/validation";
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export async function GET(request, { params }) {
 
   const { id } = await params;
 
-  if (!isValidObjectId(id)) {
+  if (!isValidUuid(id)) {
     return NextResponse.json({ error: "Invalid URL id" }, { status: 400 });
   }
 
@@ -23,18 +23,16 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: ownership.error }, { status: ownership.status });
   }
 
-  const db = await getDatabase();
-  const clicks = await db
-    .collection("clicks")
-    .find({ urlId: new ObjectId(id) })
-    .sort({ timestamp: -1 })
-    .limit(500)
-    .toArray();
+  const db = getDb();
+  const clickData = await db
+    .select()
+    .from(clicks)
+    .where(eq(clicks.urlId, id))
+    .orderBy(desc(clicks.timestamp))
+    .limit(500);
 
-  const analytics = {
+  return NextResponse.json({
     ...ownership.url,
-    clickData: clicks,
-  };
-
-  return NextResponse.json(analytics);
+    clickData,
+  });
 }

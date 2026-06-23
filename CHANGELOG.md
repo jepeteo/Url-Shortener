@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Neon Postgres database with Drizzle ORM (replaces MongoDB)
+- `DATABASE_URL` env var, `npm run db:push` / `db:migrate` / `db:studio` scripts
+- Daily cron job to clean up expired links (`/api/cron/cleanup-expired`)
+- `isValidUuid` helper for URL id validation
 - Production Upstash Redis requirement for rate limiting in production (fail-closed without Redis)
 - Named per-route rate limit presets (`RATE_LIMITS`) for shorten, API v1, delete, and API key routes
 - Redis-backed redirect cache with configurable `REDIRECT_CACHE_TTL_SEC` (default 5 minutes)

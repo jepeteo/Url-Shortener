@@ -1,16 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { ObjectId } from "mongodb";
-import { isValidObjectId } from "../lib/validation";
+import { isValidUuid } from "../lib/validation";
 
-describe("isValidObjectId", () => {
-  it("accepts valid ObjectId strings", () => {
-    const id = new ObjectId().toString();
-    expect(isValidObjectId(id)).toBe(true);
+describe("isValidUuid", () => {
+  it("accepts valid UUID strings", () => {
+    expect(isValidUuid("550e8400-e29b-41d4-a716-446655440000")).toBe(true);
   });
 
   it("rejects invalid ids", () => {
-    expect(isValidObjectId("not-an-id")).toBe(false);
-    expect(isValidObjectId("")).toBe(false);
-    expect(isValidObjectId(null)).toBe(false);
+    expect(isValidUuid("not-an-id")).toBe(false);
+    expect(isValidUuid("")).toBe(false);
+    expect(isValidUuid(null)).toBe(false);
   });
 });

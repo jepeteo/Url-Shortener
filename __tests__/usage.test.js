@@ -1,21 +1,22 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const mockCountDocuments = vi.fn();
+const mockCountResult = vi.fn();
 const mockDb = {
-  collection: vi.fn(() => ({
-    countDocuments: mockCountDocuments,
+  select: vi.fn(() => ({
+    from: vi.fn(() => ({
+      where: vi.fn().mockImplementation(() => mockCountResult()),
+    })),
   })),
 };
 
-vi.mock("../lib/mongodb", () => ({
-  default: Promise.resolve({
-    db: () => mockDb,
-  }),
+vi.mock("../lib/db", () => ({
+  getDb: () => mockDb,
+  urls: {},
 }));
 
 describe("canCreateLink", () => {
   beforeEach(() => {
-    mockCountDocuments.mockReset();
+    mockCountResult.mockReset();
   });
 
   it("allows anonymous users", async () => {
@@ -25,7 +26,7 @@ describe("canCreateLink", () => {
   });
 
   it("blocks free users at monthly limit", async () => {
-    mockCountDocuments.mockResolvedValue(20);
+    mockCountResult.mockResolvedValue([{ count: 20 }]);
     const { canCreateLink } = await import("../lib/usage");
     const result = await canCreateLink({
       id: "user1",
@@ -43,7 +44,7 @@ describe("canCreateLink", () => {
   });
 
   it("caps unverified free users at 2 links", async () => {
-    mockCountDocuments.mockResolvedValue(2);
+    mockCountResult.mockResolvedValue([{ count: 2 }]);
     const { canCreateLink } = await import("../lib/usage");
     const result = await canCreateLink({
       id: "user1",
@@ -57,7 +58,7 @@ describe("canCreateLink", () => {
   });
 
   it("allows unverified free users under 2 links", async () => {
-    mockCountDocuments.mockResolvedValue(1);
+    mockCountResult.mockResolvedValue([{ count: 1 }]);
     const { canCreateLink } = await import("../lib/usage");
     const result = await canCreateLink({
       id: "user1",

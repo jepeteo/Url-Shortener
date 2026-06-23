@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import clientPromise from "../../../lib/mongodb";
+import { and, count, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
+import { getDb, urls } from "@/lib/db";
 import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function GET(request) {
@@ -16,35 +17,38 @@ export async function GET(request) {
   }
 
   const userId = session.user.id;
-  const client = await clientPromise;
-  const db = client.db("urlShortener");
-  const skip = (page - 1) * limit;
+  const db = getDb();
+  const offset = (page - 1) * limit;
+  const now = new Date();
 
-  const urls = await db
-    .collection("urls")
-    .find({ userId })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .toArray();
+  const [urlRows, activeResult, clicksResult, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(urls)
+      .where(eq(urls.userId, userId))
+      .orderBy(desc(urls.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: count() })
+      .from(urls)
+      .where(
+        and(
+          eq(urls.userId, userId),
+          or(gt(urls.expiresAt, now), isNull(urls.expiresAt))
+        )
+      ),
+    db
+      .select({ totalClicks: sql`coalesce(sum(${urls.clicks}), 0)` })
+      .from(urls)
+      .where(eq(urls.userId, userId)),
+    db.select({ count: count() }).from(urls).where(eq(urls.userId, userId)),
+  ]);
 
-  const activeLinks = await db.collection("urls").countDocuments({
-    userId,
-    $or: [{ expiresAt: { $gt: new Date() } }, { expiresAt: null }],
+  return NextResponse.json({
+    urls: urlRows,
+    total: totalResult[0]?.count ?? 0,
+    activeLinks: activeResult[0]?.count ?? 0,
+    totalClicks: Number(clicksResult[0]?.totalClicks ?? 0),
   });
-
-  const totalClicksResult = await db
-    .collection("urls")
-    .aggregate([
-      { $match: { userId } },
-      { $group: { _id: null, totalClicks: { $sum: "$clicks" } } },
-    ])
-    .toArray();
-
-  const totalClicks =
-    totalClicksResult.length > 0 ? totalClicksResult[0].totalClicks : 0;
-
-  const total = await db.collection("urls").countDocuments({ userId });
-
-  return NextResponse.json({ urls, total, activeLinks, totalClicks });
 }

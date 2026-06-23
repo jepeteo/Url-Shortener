@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
+import { eq } from "drizzle-orm";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getStripe } from "@/lib/stripe";
-import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { getDb, users } from "@/lib/db";
 import { validateCsrf } from "@/lib/csrf";
 
 export async function POST(request) {
@@ -21,10 +21,9 @@ export async function POST(request) {
     return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
   }
 
-  const client = await clientPromise;
-  const db = client.db("urlShortener");
-  const user = await db.collection("users").findOne({
-    _id: new ObjectId(session.user.id),
+  const db = getDb();
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
   });
 
   if (!user?.stripeCustomerId) {

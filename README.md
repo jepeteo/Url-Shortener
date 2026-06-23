@@ -1,6 +1,6 @@
 # URL Shortener
 
-A modern, feature-rich URL shortening service built with Next.js, MongoDB, and Shadcn UI components.
+A modern, feature-rich URL shortening service built with Next.js, Neon Postgres, and Shadcn UI components.
 
 ## Features
 
@@ -21,7 +21,7 @@ A modern, feature-rich URL shortening service built with Next.js, MongoDB, and S
 ## Tech Stack
 
 - Next.js 15 (App Router)
-- MongoDB
+- Neon Postgres with Drizzle ORM
 - NextAuth for authentication
 - Stripe for billing
 - Tailwind CSS + Shadcn UI components + next-themes
@@ -32,7 +32,7 @@ A modern, feature-rich URL shortening service built with Next.js, MongoDB, and S
 ### Prerequisites
 
 - Node.js 20+
-- MongoDB database
+- Neon Postgres database
 
 ### Setup
 
@@ -47,16 +47,16 @@ npm install
 2. Create a `.env.local` file (see `.env.example` for all variables):
 
 ```env
-MONGODB_URI=your_mongodb_connection_string
+DATABASE_URL=your_neon_connection_string
 NEXTAUTH_SECRET=your_nextauth_secret
 NEXTAUTH_URL=http://localhost:3000
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-3. Create database indexes (optional but recommended):
+3. Push the database schema to Neon:
 
 ```bash
-npm run create-indexes
+npm run db:push
 ```
 
 4. Run the development server:
@@ -75,8 +75,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
    **Upstash Redis is required in production** for rate limiting and redirect caching.
 3. Configure a Stripe webhook pointing to `https://your-domain/api/stripe/webhook`
    and copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
-4. Deploy. After the first deploy, run `npm run create-indexes` and
-   `npm run migrate-email-verified` against your production database.
+4. Deploy. After the first deploy, run `npm run db:push` against your Neon database
+   and optionally `npm run seed-demo` for local-style demo data.
 
 ## Environment Variables
 
@@ -84,7 +84,8 @@ See `.env.example` for the full list. Key variables:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `MONGODB_URI` | Yes | MongoDB connection string |
+| `DATABASE_URL` | Yes | Neon Postgres connection string (pooled URL for production) |
+| `CRON_SECRET` | Yes in production | Bearer token for the expired-link cleanup cron job |
 | `NEXTAUTH_SECRET` | Yes | Long random secret for NextAuth |
 | `NEXTAUTH_URL` / `NEXT_PUBLIC_BASE_URL` | Yes | App base URL |
 | `GITHUB_ID` / `GITHUB_SECRET` | No | GitHub OAuth login |

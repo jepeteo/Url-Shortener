@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("../lib/mongodb", () => ({
-  default: Promise.resolve({ db: () => ({}) }),
+vi.mock("../lib/db", () => ({
+  getDb: () => ({}),
 }));
 
 import { generateApiKey, hashApiKey } from "../lib/apiKeys";

@@ -13,7 +13,7 @@ const navItems = [
   { href: "/app", label: "Shorten", icon: Link2 },
   { href: "/pricing", label: "Pricing", icon: Tag },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, auth: true },
-  { href: "/admin", label: "Admin", icon: Shield, admin: true },
+  { href: "/mtxadmin", label: "Admin", icon: Shield, admin: true },
 ];
 
 function NavLink({ href, label, icon: Icon, active, onClick }) {

@@ -3,15 +3,27 @@
 This document tracks features that are planned or coming soon to mikrouli.link.
 Items are grouped by priority, not committed dates.
 
+## Neon migration (next infrastructure step)
+
+Before building DB-heavy features, migrate from MongoDB to Neon Postgres:
+
+- Define Drizzle (or Prisma) schema from [docs/schema-inventory.md](docs/schema-inventory.md)
+- Rewrite ~25 MongoDB call sites across API routes and libs
+- Replace MongoDB TTL index on `urls.expiresAt` with a scheduled cleanup job
+- Re-seed demo data for Postgres
+- Remove `mongodb` dependency after migration is complete
+
+See [docs/schema-inventory.md](docs/schema-inventory.md) for the current data model.
+
 ## Coming soon (next up)
 
 - **Custom domains** — bring your own branded domain for short links (Business plan).
   Already referenced on the pricing page as "coming soon".
 - **Geo & country analytics** — enrich click data with country/region (privacy-friendly,
   derived from anonymized IP) and show a map/breakdown on the analytics page.
-- **Email verification** — verify email on registration to reduce spam accounts.
 - **Bulk link creation & CSV import** — create many links at once from the dashboard or API.
 - **Link editing** — update destination URL, alias, and expiry after creation.
+- **API key lifecycle** — revoke, rotate, and manage multiple keys per user.
 
 ## Planned
 
@@ -34,5 +46,12 @@ Items are grouped by priority, not committed dates.
 
 ## Recently shipped
 
-See [CHANGELOG.md](CHANGELOG.md) for shipped features, including the modern redesign,
-dark mode, annual billing, anonymized click tracking, and the legal pages.
+See [CHANGELOG.md](CHANGELOG.md) for shipped features, including:
+
+- Production Redis hardening (Upstash rate limits + redirect cache)
+- CSRF protection on session mutations
+- JSON-LD structured data (landing + pricing)
+- Dashboard link status and expiry badges
+- Email verification with soft 2-link cap for unverified users
+- Sentry error monitoring and cookie consent
+- Modern redesign, dark mode, annual billing, and legal pages

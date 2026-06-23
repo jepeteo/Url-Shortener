@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Production Upstash Redis requirement for rate limiting in production (fail-closed without Redis)
+- Named per-route rate limit presets (`RATE_LIMITS`) for shorten, API v1, delete, and API key routes
+- Redis-backed redirect cache with configurable `REDIRECT_CACHE_TTL_SEC` (default 5 minutes)
+- CSRF protection via double-submit cookie on session mutations (`GET /api/csrf`, `fetchWithCsrf` helper)
+- JSON-LD structured data on landing (`SoftwareApplication`, `FAQPage`) and pricing (`Product`/`Offer`)
+- Dashboard link status badges with active/expired labels and expiry countdown
+- Shared Upstash client helper (`lib/upstash.js`)
+- Schema inventory doc for upcoming Neon migration (`docs/schema-inventory.md`)
 - Email verification for credentials signups with resend and verify routes
 - Soft verification: unverified users can log in but are limited to 2 links/month until verified
 - `VerifyEmailBanner` with resend action; GitHub OAuth users are auto-verified
@@ -26,6 +34,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `isValidObjectId` helper for safer MongoDB id validation
 
 ### Changed
+- Redirect cache and rate limit routes now use async Upstash operations
+- URL delete invalidates redirect cache entry for the short code
+- README, `.env.example`, and ROADMAP updated for Redis requirements and Neon migration handoff
 - CI pipeline now runs production build, npm audit, and changelog verification
 - Dashboard action buttons restyled to be theme-aware (no hard-coded light colors)
 - Dashboard API key section uses live plan from `/api/usage` instead of stale JWT session plan
@@ -43,6 +54,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Stripe webhook errors no longer leak internal exception messages
 
 ### Security
+- CSRF tokens required on `/api/shorten`, URL delete, API key generation, claim, and Stripe routes
+- Rate limiting no longer silently falls back to in-memory storage in production
 - Click IP addresses are anonymized (IPv4 /24, IPv6 /48) before storage for GDPR compliance
 - Stripe webhooks are now idempotent (deduplicated by event id) and handle `invoice.payment_failed`
 - Hardened SSRF URL validation: decimal IPs, private IPv4/IPv6 ranges blocked

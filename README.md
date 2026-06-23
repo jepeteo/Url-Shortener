@@ -12,7 +12,9 @@ A modern, feature-rich URL shortening service built with Next.js, MongoDB, and S
 - Freemium plans with Stripe billing (Free, Pro, Business) and monthly/annual pricing
 - Business-tier API access via API keys
 - Password reset functionality
-- Rate limiting to prevent abuse (in-memory or Upstash Redis)
+- Rate limiting to prevent abuse (Upstash Redis; required in production)
+- Redis-backed redirect caching for hot links
+- CSRF protection on session-authenticated mutations
 - Light/dark mode and a modern, responsive UI
 - Privacy-friendly click tracking with anonymized IPs
 
@@ -70,6 +72,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 1. Push the repo to GitHub and import it into [Vercel](https://vercel.com).
 2. Add all environment variables from `.env.example` in the Vercel project settings
    (set `NEXTAUTH_URL` and `NEXT_PUBLIC_BASE_URL` to your production URL).
+   **Upstash Redis is required in production** for rate limiting and redirect caching.
 3. Configure a Stripe webhook pointing to `https://your-domain/api/stripe/webhook`
    and copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
 4. Deploy. After the first deploy, run `npm run create-indexes` and
@@ -86,7 +89,8 @@ See `.env.example` for the full list. Key variables:
 | `NEXTAUTH_URL` / `NEXT_PUBLIC_BASE_URL` | Yes | App base URL |
 | `GITHUB_ID` / `GITHUB_SECRET` | No | GitHub OAuth login |
 | `RESEND_API_KEY` / `EMAIL_FROM` | No | Password-reset emails |
-| `UPSTASH_REDIS_REST_URL` / `..._TOKEN` | No | Distributed rate limiting |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | **Yes in production** | Rate limiting and redirect cache |
+| `REDIRECT_CACHE_TTL_SEC` | No | Redirect cache TTL in seconds (default: 300) |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | For billing | Stripe API + webhook |
 | `STRIPE_PRO_PRICE_ID` / `STRIPE_BUSINESS_PRICE_ID` | For billing | Monthly price IDs |
 | `STRIPE_PRO_ANNUAL_PRICE_ID` / `STRIPE_BUSINESS_ANNUAL_PRICE_ID` | For annual billing | Annual price IDs |
@@ -105,6 +109,7 @@ Run `npm run seed-demo` or click "Try Demo Account" on the sign-in page (develop
 
 | Method | Route | Description |
 |--------|-------|-------------|
+| GET | `/api/csrf` | Fetch CSRF token for session mutations |
 | POST | `/api/shorten` | Create a short URL (session or anonymous) |
 | POST | `/api/v1/shorten` | Create via API key (Business plan) |
 | GET | `/api/urls` | List user's URLs (paginated) |

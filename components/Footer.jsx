@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Github, Heart, Linkedin } from "lucide-react";
+import { Github, Heart, Linkedin, Link2 } from "lucide-react";
 import BuyMeACoffee from "@/components/BuyMeACoffee";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,11 @@ const productLinks = [
 const guestLinks = [
   { href: "/auth/signin", label: "Sign in" },
   { href: "/auth/register", label: "Create account" },
+];
+
+const legalLinks = [
+  { href: "/terms", label: "Terms of Service" },
+  { href: "/privacy", label: "Privacy Policy" },
 ];
 
 function FooterLinks({ title, links }) {
@@ -81,17 +86,20 @@ export function Footer() {
           className={cn(
             "grid gap-10 md:grid-cols-2 lg:gap-12",
             visibleGuestLinks.length > 0
-              ? "lg:grid-cols-[minmax(0,1.5fr)_minmax(0,0.75fr)_minmax(0,0.75fr)]"
-              : "lg:grid-cols-[minmax(0,1.5fr)_minmax(0,0.75fr)]"
+              ? "lg:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,0.7fr))]"
+              : "lg:grid-cols-[minmax(0,1.5fr)_repeat(2,minmax(0,0.7fr))]"
           )}
         >
           <div className="space-y-5">
             <div className="space-y-3">
               <Link
                 href="/"
-                className="text-xl font-bold tracking-tight hover:opacity-80"
+                className="flex items-center gap-2 text-xl font-bold tracking-tight hover:opacity-90"
               >
-                mikrouli.link
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg gradient-brand text-white">
+                  <Link2 className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="gradient-text">mikrouli.link</span>
               </Link>
               <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
                 Short links, click analytics, and QR codes — simple tools for creators
@@ -115,6 +123,7 @@ export function Footer() {
 
           <FooterLinks title="Product" links={visibleProductLinks} />
           <FooterLinks title="Account" links={visibleGuestLinks} />
+          <FooterLinks title="Legal" links={legalLinks} />
         </div>
       </div>
 

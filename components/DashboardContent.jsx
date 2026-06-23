@@ -29,20 +29,27 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Trash2, BarChart2, QrCode, InfoIcon, Link2 } from "lucide-react";
+import { Trash2, BarChart2, QrCode, InfoIcon, Link2, MousePointerClick } from "lucide-react";
 import Link from "next/link";
 import { CopyButton } from "@/components/CopyButton";
 import { QRModal } from "@/components/QRModal";
 import { toast } from "sonner";
 
-function StatCard({ title, content }) {
+function StatCard({ title, content, icon: Icon }) {
   return (
-    <Card>
+    <Card className="card-hover">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {title}
+        </CardTitle>
+        {Icon && (
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg gradient-brand text-white">
+            <Icon className="h-4 w-4" aria-hidden="true" />
+          </span>
+        )}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{content}</div>
+        <div className="text-3xl font-bold tracking-tight">{content}</div>
       </CardContent>
     </Card>
   );
@@ -141,8 +148,8 @@ export default function DashboardContent({
   return (
     <>
       <div className="mb-6 grid gap-4 md:grid-cols-3">
-        <StatCard title="Active Links" content={activeLinks} />
-        <StatCard title="Total Clicks" content={totalClicks} />
+        <StatCard title="Active Links" content={activeLinks} icon={Link2} />
+        <StatCard title="Total Clicks" content={totalClicks} icon={MousePointerClick} />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Add New URL</CardTitle>
@@ -255,17 +262,13 @@ export default function DashboardContent({
                       ? new Date(url.lastClickedAt).toLocaleString()
                       : "N/A"}
                   </TableCell>
-                  <TableCell className="flex items-center md:justify-end">
+                  <TableCell className="flex items-center gap-2 md:justify-end">
                     <Button
-                      onClick={() => handleRemove(url._id, url.shortCode)}
-                      variant="ghost"
+                      asChild
+                      variant="outline"
                       size="icon"
-                      className="bg-red-100 text-red-800 hover:bg-red-200"
-                      aria-label={`Delete URL ${url.shortCode}`}
+                      className="text-primary hover:bg-accent hover:text-accent-foreground"
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button asChild variant="ghost" size="icon" className="ml-2 bg-green-100 hover:bg-green-200">
                       <Link
                         href={`/analytics/${url._id}`}
                         aria-label={`View analytics for URL ${url.shortCode}`}
@@ -275,12 +278,21 @@ export default function DashboardContent({
                     </Button>
                     <Button
                       onClick={() => setShowQR(url._id)}
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      className="ml-2 bg-blue-100 hover:bg-blue-200"
+                      className="text-primary hover:bg-accent hover:text-accent-foreground"
                       aria-label={`View QR code for URL ${url.shortCode}`}
                     >
-                      <QrCode className="h-4 w-4 text-blue-600" />
+                      <QrCode className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={() => handleRemove(url._id, url.shortCode)}
+                      variant="outline"
+                      size="icon"
+                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      aria-label={`Delete URL ${url.shortCode}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>

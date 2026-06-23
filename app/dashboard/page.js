@@ -87,7 +87,7 @@ export default function Dashboard() {
           </AlertDescription>
         </Alert>
       )}
-      {session?.user?.plan === "business" && (
+      {session?.user && usage?.plan === "business" && (
         <Alert className="mb-4">
           <AlertTitle>API access</AlertTitle>
           <AlertDescription className="space-y-2">

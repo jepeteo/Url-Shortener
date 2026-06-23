@@ -10,15 +10,16 @@ export default function AppPage() {
   const { data: session } = useSession();
 
   return (
-    <div className="flex min-h-[64vh] flex-col items-center justify-center p-4 md:min-h-[88vh] md:p-24">
-      <Card className="w-full max-w-lg bg-card">
+    <div className="relative flex min-h-[70vh] flex-col items-center justify-center p-4 md:min-h-[82vh] md:p-24">
+      <div className="glow absolute inset-0 -z-10" aria-hidden="true" />
+      <Card className="w-full max-w-lg border-border/70 shadow-xl shadow-primary/5">
         <CardHeader className="text-center">
+          <h1 className="text-2xl font-bold tracking-tight">
+            Shorten a <span className="gradient-text">URL</span>
+          </h1>
           <p className="text-sm text-muted-foreground">
-            <Link href="/" className="hover:underline">
-              mikrouli.link
-            </Link>
+            Paste a long link below to get a short, shareable URL.
           </p>
-          <h1 className="text-2xl font-bold">Shorten a URL</h1>
         </CardHeader>
         <CardContent>
           {session && (

@@ -1,13 +1,19 @@
 "use client";
-import { SessionProvider } from "next-auth/react";
-import { QueryClient, QueryClientProvider } from "react-query";
 
-const queryClient = new QueryClient();
+import { SessionProvider } from "next-auth/react";
+import { ThemeProvider } from "next-themes";
 
 export function Providers({ children }) {
   return (
     <SessionProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+      </ThemeProvider>
     </SessionProvider>
   );
 }

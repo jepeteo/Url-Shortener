@@ -35,10 +35,11 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24">
-      <Card className="w-full max-w-md">
+    <div className="relative flex min-h-[70vh] flex-col items-center justify-center p-4 md:min-h-[82vh] md:p-24">
+      <div className="glow absolute inset-0 -z-10" aria-hidden="true" />
+      <Card className="w-full max-w-md border-border/70 shadow-xl shadow-primary/5">
         <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">Reset Password</CardTitle>
+          <CardTitle className="text-center text-2xl font-bold">Reset password</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

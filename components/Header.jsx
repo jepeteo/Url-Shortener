@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Link2, LayoutDashboard, Menu, Shield, Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -52,10 +53,13 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between px-4 md:h-[4.5rem]">
         <Link
           href="/"
-          className="text-xl font-bold tracking-tight hover:opacity-80 md:text-2xl"
+          className="group flex items-center gap-2 text-xl font-bold tracking-tight hover:opacity-90 md:text-2xl"
           onClick={closeMobile}
         >
-          mikrouli.link
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg gradient-brand text-white shadow-sm shadow-primary/30 transition-transform group-hover:scale-105">
+            <Link2 className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <span className="gradient-text">mikrouli.link</span>
         </Link>
 
         <nav className="hidden items-center gap-1.5 md:flex" aria-label="Main navigation">
@@ -68,7 +72,8 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           {status === "authenticated" ? (
             <Button variant="outline" onClick={() => signOut({ callbackUrl: "/" })}>
               Sign out
@@ -85,17 +90,19 @@ export function Header() {
           )}
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setMobileOpen((open) => !open)}
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-nav"
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileOpen((open) => !open)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </div>
 
       {mobileOpen && (

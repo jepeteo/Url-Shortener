@@ -34,6 +34,57 @@ import Link from "next/link";
 import { CopyButton } from "@/components/CopyButton";
 import { QRModal } from "@/components/QRModal";
 import { toast } from "sonner";
+import { fetchWithCsrf } from "@/hooks/useCsrf";
+import { cn } from "@/lib/utils";
+
+function getLinkStatus(expiresAt) {
+  if (expiresAt === null || expiresAt === undefined) {
+    return {
+      label: "Active",
+      detail: "Never expires",
+      className: "bg-success/15 text-success",
+    };
+  }
+
+  const expiry = new Date(expiresAt);
+  const now = new Date();
+
+  if (expiry <= now) {
+    return {
+      label: "Expired",
+      detail: `Expired on ${expiry.toLocaleDateString()}`,
+      className: "bg-destructive/15 text-destructive",
+    };
+  }
+
+  const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const detail =
+    daysLeft === 1 ? "Expires in 1 day" : `Expires in ${daysLeft} days`;
+
+  return {
+    label: "Active",
+    detail,
+    className: "bg-success/15 text-success",
+  };
+}
+
+function LinkStatusBadge({ expiresAt }) {
+  const status = getLinkStatus(expiresAt);
+
+  return (
+    <div className="space-y-1">
+      <span
+        className={cn(
+          "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+          status.className
+        )}
+      >
+        {status.label}
+      </span>
+      <p className="text-xs text-muted-foreground">{status.detail}</p>
+    </div>
+  );
+}
 
 function StatCard({ title, content, icon: Icon }) {
   return (
@@ -79,7 +130,7 @@ export default function DashboardContent({
       setFormStatus(null);
 
       try {
-        const response = await fetch("/api/shorten", {
+        const response = await fetchWithCsrf("/api/shorten", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: newUrl }),
@@ -108,7 +159,7 @@ export default function DashboardContent({
         return;
       }
       try {
-        const response = await fetch(`/api/urls/${id}`, { method: "DELETE" });
+        const response = await fetchWithCsrf(`/api/urls/${id}`, { method: "DELETE" });
         if (!response.ok) {
           throw new Error("Failed to delete URL");
         }
@@ -219,6 +270,7 @@ export default function DashboardContent({
             <TableRow className="hidden md:table-row">
               <TableHead>Original URL</TableHead>
               <TableHead>Short URL</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Clicks</TableHead>
               <TableHead>Created At</TableHead>
               <TableHead>Last Clicked</TableHead>
@@ -247,6 +299,10 @@ export default function DashboardContent({
                       </a>
                       <CopyButton value={shortLink} label={`Copy ${url.shortCode}`} />
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-bold md:hidden">Status: </span>
+                    <LinkStatusBadge expiresAt={url.expiresAt} />
                   </TableCell>
                   <TableCell>
                     <span className="font-bold md:hidden">Clicks: </span>

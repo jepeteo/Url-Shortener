@@ -8,6 +8,7 @@ const RESERVED_PATHS = new Set([
   "analytics",
   "pricing",
   "mtxadmin",
+  "contact",
   "terms",
   "privacy",
   "link-not-found",

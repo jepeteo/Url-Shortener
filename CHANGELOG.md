@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- `/contact` route blocked by short-link middleware rewrite (added to reserved paths)
+
 ### Added
 - Admin panel tabs for users, links, and recent clicks with search, suspicious-user flagging, and delete actions
 - Contact page (`/contact`) linking to MTX Studio support channels, with footer and sitemap links

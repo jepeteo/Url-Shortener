@@ -43,6 +43,9 @@ export default function PrivacyPage() {
             <li>
               <strong>Account data:</strong> your name, email address, and a securely
               hashed password (or GitHub OAuth identifier if you sign in with GitHub).
+              If you register with email and later sign in with GitHub using the same
+              email address, those accounts are linked automatically and GitHub sign-in
+              marks your email as verified.
             </li>
             <li>
               <strong>Link data:</strong> the URLs you shorten, custom aliases, UTM

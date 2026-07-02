@@ -47,6 +47,11 @@ describe("isValidUrl", () => {
     expect(isValidUrl(null)).toBe(false);
     expect(isValidUrl(undefined)).toBe(false);
   });
+
+  it("rejects URLs longer than the max length", () => {
+    const longUrl = `https://example.com/${"a".repeat(2048)}`;
+    expect(isValidUrl(longUrl)).toBe(false);
+  });
 });
 
 describe("aliases", () => {
@@ -65,6 +70,8 @@ describe("aliases", () => {
     expect(isReservedAlias("pricing")).toBe(true);
     expect(isReservedAlias("app")).toBe(true);
     expect(isReservedAlias("admin")).toBe(true);
+    expect(isReservedAlias("mtxadmin")).toBe(true);
+    expect(isReservedAlias("contact")).toBe(true);
     expect(isReservedAlias("custom")).toBe(false);
   });
 });

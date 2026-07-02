@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Mail, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { fetchWithCsrf } from "@/hooks/useCsrf";
 
 const DISMISS_KEY = "verify-email-banner-dismissed";
 
@@ -44,7 +45,7 @@ export function VerifyEmailBanner() {
   const handleResend = async () => {
     setResending(true);
     try {
-      const response = await fetch("/api/auth/verify/resend", { method: "POST" });
+      const response = await fetchWithCsrf("/api/auth/verify/resend", { method: "POST" });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Failed to send verification email");

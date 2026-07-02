@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { fetchWithCsrf } from "@/hooks/useCsrf";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -135,7 +136,7 @@ export default function AdminPage() {
       return;
     }
 
-    const response = await fetch("/api/admin", {
+    const response = await fetchWithCsrf("/api/admin", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: user.id }),
@@ -170,7 +171,7 @@ export default function AdminPage() {
   const handleDeleteLink = async (url) => {
     if (!window.confirm(`Delete /${url.shortCode}?`)) return;
 
-    const response = await fetch("/api/admin", {
+    const response = await fetchWithCsrf("/api/admin", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ shortCode: url.shortCode }),

@@ -38,6 +38,7 @@ export async function POST(request) {
     alias,
     expiryDays,
     utm,
+    ip,
   });
 
   if (result.error) {

@@ -7,7 +7,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Fixed
+- Redirect cache now invalidated when links expire (cron) or are deleted (admin/user delete)
+- Paid analytics (charts, click history, CSV export) gated by plan on API and UI
+- `past_due` subscriptions no longer grant Pro/Business features until billing is active again
+- Admin DELETE mutations now require CSRF tokens
+- Unified reserved path list prevents unusable custom aliases (e.g. `contact`, `mtxadmin`)
+- JWT session plan refreshed from database on each request
+- Password reset hashing aligned to bcrypt cost 12
+- CSRF token comparison uses timing-safe equality
+- WhatsApp in-app clicks no longer filtered as bot traffic
 - `/contact` route blocked by short-link middleware rewrite (added to reserved paths)
+
+### Added
+- Registration bot protection: CSRF, honeypot field, per-email rate limit, optional Cloudflare Turnstile
+- Anonymous link monthly cap (20 links per IP)
+- CSRF protection on email verification resend
+- `lib/billing.js` with `isBillingActive` and `getEffectivePlan` helpers
+- `lib/reservedPaths.js` shared between middleware and alias validation
+- `lib/botProtection.js` for honeypot and Turnstile verification
+- HSTS header in production
+- Max URL length validation (2048 characters)
+- Unit tests for billing, bot protection, and reserved paths
+
+### Changed
+- Registration success response no longer returns `userId`
 
 ### Added
 - Admin panel tabs for users, links, and recent clicks with search, suspicious-user flagging, and delete actions

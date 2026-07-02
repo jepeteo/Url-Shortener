@@ -68,4 +68,17 @@ describe("canCreateLink", () => {
     expect(result.allowed).toBe(true);
     expect(result.limit).toBe(2);
   });
+
+  it("downgrades past_due pro users to free limits", async () => {
+    mockCountResult.mockResolvedValue([{ count: 20 }]);
+    const { canCreateLink } = await import("../lib/usage");
+    const result = await canCreateLink({
+      id: "user1",
+      plan: "pro",
+      paymentStatus: "past_due",
+      emailVerified: new Date(),
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.limit).toBe(20);
+  });
 });

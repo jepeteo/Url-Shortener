@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { lt } from "drizzle-orm";
 import { getDb, urls } from "@/lib/db";
+import { invalidateCachedRedirect } from "@/lib/redirectCache";
 
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
@@ -16,7 +17,11 @@ export async function GET(request) {
   const deleted = await db
     .delete(urls)
     .where(lt(urls.expiresAt, now))
-    .returning({ id: urls.id });
+    .returning({ shortCode: urls.shortCode });
+
+  await Promise.all(
+    deleted.map((row) => invalidateCachedRedirect(row.shortCode))
+  );
 
   return NextResponse.json({ deleted: deleted.length });
 }

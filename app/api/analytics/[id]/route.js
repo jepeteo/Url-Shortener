@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { desc, eq } from "drizzle-orm";
 import { getDb, clicks } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { assertUrlOwner } from "@/lib/auth";
+import { getSessionUser, assertUrlOwner } from "@/lib/auth";
+import { getUserFeatures } from "@/lib/plans";
 import { isValidUuid } from "@/lib/validation";
 
 export async function GET(request, { params }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const user = await getSessionUser();
+  if (!user?.id) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
@@ -18,21 +17,30 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: "Invalid URL id" }, { status: 400 });
   }
 
-  const ownership = await assertUrlOwner(id, session.user.id);
+  const ownership = await assertUrlOwner(id, user.id);
   if (ownership.error) {
     return NextResponse.json({ error: ownership.error }, { status: ownership.status });
   }
 
-  const db = getDb();
-  const clickData = await db
-    .select()
-    .from(clicks)
-    .where(eq(clicks.urlId, id))
-    .orderBy(desc(clicks.timestamp))
-    .limit(500);
+  const features = getUserFeatures(user);
+  let clickData = [];
+
+  if (features.analyticsCharts) {
+    const db = getDb();
+    clickData = await db
+      .select()
+      .from(clicks)
+      .where(eq(clicks.urlId, id))
+      .orderBy(desc(clicks.timestamp))
+      .limit(500);
+  }
 
   return NextResponse.json({
     ...ownership.url,
     clickData,
+    features: {
+      charts: features.analyticsCharts,
+      csvExport: features.csvExport,
+    },
   });
 }

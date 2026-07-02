@@ -10,7 +10,7 @@ export async function GET() {
   }
 
   const usage = await canCreateLink(user);
-  const plan = getPlan(user.plan);
+  const plan = getPlan(user.effectivePlan ?? user.plan);
 
   return NextResponse.json({
     plan: plan.id,

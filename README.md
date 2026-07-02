@@ -14,7 +14,8 @@ A modern, feature-rich URL shortening service built with Next.js, Neon Postgres,
 - Password reset functionality
 - Rate limiting to prevent abuse (Upstash Redis; required in production)
 - Redis-backed redirect caching for hot links
-- CSRF protection on session-authenticated mutations
+- CSRF protection on session-authenticated mutations and registration
+- Registration bot protection (honeypot, per-IP/per-email rate limits, optional Turnstile)
 - Light/dark mode and a modern, responsive UI
 - Privacy-friendly click tracking with anonymized IPs
 
@@ -88,7 +89,8 @@ See `.env.example` for the full list. Key variables:
 | `CRON_SECRET` | Yes in production | Bearer token for the expired-link cleanup cron job |
 | `NEXTAUTH_SECRET` | Yes | Long random secret for NextAuth |
 | `NEXTAUTH_URL` / `NEXT_PUBLIC_BASE_URL` | Yes | App base URL |
-| `GITHUB_ID` / `GITHUB_SECRET` | No | GitHub OAuth login |
+| `GITHUB_ID` / `GITHUB_SECRET` | No | GitHub OAuth login (auto-verifies email; links accounts with the same email) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | No | Cloudflare Turnstile for registration bot protection |
 | `RESEND_API_KEY` / `EMAIL_FROM` | No | Password-reset emails |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | **Yes in production** | Rate limiting and redirect cache |
 | `REDIRECT_CACHE_TTL_SEC` | No | Redirect cache TTL in seconds (default: 300) |
@@ -131,8 +133,6 @@ Run `npm run seed-demo` or click "Try Demo Account" on the sign-in page (develop
 - `npm run lint` — ESLint
 - `npm run check:changelog` — verify CHANGELOG updated for source changes
 - `npm run seed-demo` — seed demo user and sample URLs
-- `npm run create-indexes` — create MongoDB indexes
-- `npm run migrate-email-verified` — backfill `emailVerified` for existing users
 
 ## Contributing
 

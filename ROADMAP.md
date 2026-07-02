@@ -8,6 +8,15 @@ Items are grouped by priority, not committed dates.
 See [CHANGELOG.md](CHANGELOG.md) for shipped features, including:
 
 - Neon Postgres migration with Drizzle ORM (replaces MongoDB)
+- Production Redis hardening (Upstash rate limits + redirect cache)
+- CSRF protection on session mutations
+- Registration bot protection (honeypot, CSRF, optional Turnstile)
+- Plan-gated analytics and billing-status feature enforcement
+- Email verification with soft 2-link cap for unverified users
+- Sentry error monitoring and cookie consent
+- Modern redesign, dark mode, annual billing, and legal pages
+
+## Planned
 
 - **Custom domains** — bring your own branded domain for short links (Business plan).
   Already referenced on the pricing page as "coming soon".
@@ -16,9 +25,6 @@ See [CHANGELOG.md](CHANGELOG.md) for shipped features, including:
 - **Bulk link creation & CSV import** — create many links at once from the dashboard or API.
 - **Link editing** — update destination URL, alias, and expiry after creation.
 - **API key lifecycle** — revoke, rotate, and manage multiple keys per user.
-
-## Planned
-
 - **Team workspaces** — invite members, shared links, and role-based access.
 - **Tags & folders** — organize links and filter the dashboard by tag.
 - **UTM builder UI** — guided builder with presets and saved campaigns.
@@ -35,15 +41,3 @@ See [CHANGELOG.md](CHANGELOG.md) for shipped features, including:
 - Slack/Discord integrations for link creation
 - Data export for an entire account (GDPR self-service export)
 - 2FA for accounts
-
-## Recently shipped
-
-See [CHANGELOG.md](CHANGELOG.md) for shipped features, including:
-
-- Production Redis hardening (Upstash rate limits + redirect cache)
-- CSRF protection on session mutations
-- JSON-LD structured data (landing + pricing)
-- Dashboard link status and expiry badges
-- Email verification with soft 2-link cap for unverified users
-- Sentry error monitoring and cookie consent
-- Modern redesign, dark mode, annual billing, and legal pages

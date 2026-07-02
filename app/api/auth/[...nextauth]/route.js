@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { getDb, users } from "@/lib/db";
+import { getEffectivePlan } from "@/lib/billing";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
@@ -96,6 +97,19 @@ export const authOptions = {
         token.id = user.id;
         token.plan = user.plan || "free";
       }
+
+      if (token?.id) {
+        const db = getDb();
+        const dbUser = await db.query.users.findFirst({
+          where: eq(users.id, token.id),
+          columns: { plan: true, paymentStatus: true },
+        });
+
+        if (dbUser) {
+          token.plan = getEffectivePlan(dbUser);
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

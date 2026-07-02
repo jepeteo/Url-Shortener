@@ -26,6 +26,14 @@ describe("canUseFeature", () => {
   });
 });
 
+describe("getUserFeatures", () => {
+  it("returns feature flags for the effective plan", async () => {
+    const { getUserFeatures } = await import("../lib/plans");
+    expect(getUserFeatures({ effectivePlan: "free" }).analyticsCharts).toBe(false);
+    expect(getUserFeatures({ effectivePlan: "pro" }).csvExport).toBe(true);
+  });
+});
+
 describe("getExpiryDaysForPlan", () => {
   it("falls back to plan default for invalid expiry", () => {
     expect(getExpiryDaysForPlan("free", 365)).toBe(14);

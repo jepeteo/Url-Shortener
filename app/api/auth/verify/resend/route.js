@@ -3,13 +3,18 @@ import { getServerSession } from "next-auth/next";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { validateCsrf } from "@/lib/csrf";
 import { getDb, users } from "@/lib/db";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { sendVerificationEmail } from "@/lib/email";
 
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 
-export async function POST() {
+export async function POST(request) {
+  if (!validateCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
+  }
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

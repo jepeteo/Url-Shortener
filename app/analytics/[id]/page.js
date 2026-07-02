@@ -30,7 +30,7 @@ import {
   FaDesktop,
   FaRobot,
 } from "react-icons/fa";
-import { BarChart2, Calendar, Globe, MousePointerClick } from "lucide-react";
+import { BarChart2, Calendar, Globe, MousePointerClick, Sparkles } from "lucide-react";
 import UAParser from "ua-parser-js";
 import Link from "next/link";
 import {
@@ -264,14 +264,29 @@ export default function UrlAnalytics({ params }) {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExport}>
-              Export CSV
-            </Button>
+            {analytics.features?.csvExport && (
+              <Button variant="outline" onClick={handleExport}>
+                Export CSV
+              </Button>
+            )}
             <Button asChild>
               <Link href="/dashboard">Back to Dashboard</Link>
             </Button>
           </div>
         </div>
+
+        {!analytics.features?.charts && (
+          <Alert>
+            <Sparkles className="h-4 w-4" />
+            <AlertTitle>Upgrade for detailed analytics</AlertTitle>
+            <AlertDescription>
+              Charts, click history, and CSV export are available on Pro and Business plans.{" "}
+              <Link href="/pricing" className="font-medium text-primary hover:underline">
+                View pricing
+              </Link>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
@@ -316,7 +331,7 @@ export default function UrlAnalytics({ params }) {
           </CardContent>
         </Card>
 
-        {chartData.length > 0 && (
+        {analytics.features?.charts && chartData.length > 0 && (
           <Card className="border-border/70">
             <CardHeader>
               <CardTitle>Clicks over time</CardTitle>
@@ -353,6 +368,7 @@ export default function UrlAnalytics({ params }) {
           </Card>
         )}
 
+        {analytics.features?.charts && (
         <Card className="border-border/70">
           <CardHeader>
             <CardTitle>Click History</CardTitle>
@@ -467,6 +483,7 @@ export default function UrlAnalytics({ params }) {
             )}
           </CardContent>
         </Card>
+        )}
       </div>
     </div>
   );

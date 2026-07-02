@@ -1,22 +1,5 @@
 import { NextResponse } from "next/server";
-
-const RESERVED_PATHS = new Set([
-  "app",
-  "api",
-  "auth",
-  "dashboard",
-  "analytics",
-  "pricing",
-  "mtxadmin",
-  "contact",
-  "terms",
-  "privacy",
-  "link-not-found",
-  "favicon.ico",
-  "robots.txt",
-  "sitemap.xml",
-  "og-image.png",
-]);
+import { isReservedPath } from "@/lib/reservedPaths";
 
 export function middleware(request) {
   const { pathname } = request.nextUrl;
@@ -34,7 +17,7 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
-  if (RESERVED_PATHS.has(segment.toLowerCase())) {
+  if (isReservedPath(segment)) {
     return NextResponse.next();
   }
 

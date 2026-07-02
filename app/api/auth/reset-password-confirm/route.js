@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+import { hash } from "bcryptjs";
 import { and, eq, gt } from "drizzle-orm";
 import { getDb, users } from "@/lib/db";
 
@@ -31,7 +31,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Password reset token is invalid or has expired" }, { status: 400 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, 12);
 
     await db
       .update(users)

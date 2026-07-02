@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { count, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { validateCsrf } from "@/lib/csrf";
 import { getDb, clicks, urls, users } from "@/lib/db";
+import { invalidateCachedRedirect } from "@/lib/redirectCache";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .split(",")
@@ -114,6 +116,10 @@ export async function GET() {
 }
 
 export async function DELETE(request) {
+  if (!validateCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
+  }
+
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -136,7 +142,7 @@ export async function DELETE(request) {
     }
 
     const userUrls = await db
-      .select({ id: urls.id })
+      .select({ id: urls.id, shortCode: urls.shortCode })
       .from(urls)
       .where(eq(urls.userId, body.userId));
 
@@ -144,6 +150,9 @@ export async function DELETE(request) {
     if (urlIds.length > 0) {
       await db.delete(clicks).where(inArray(clicks.urlId, urlIds));
       await db.delete(urls).where(eq(urls.userId, body.userId));
+      await Promise.all(
+        userUrls.map((row) => invalidateCachedRedirect(row.shortCode))
+      );
     }
 
     await db.delete(users).where(eq(users.id, body.userId));
@@ -153,6 +162,7 @@ export async function DELETE(request) {
   if (body.shortCode) {
     await db.delete(urls).where(eq(urls.shortCode, body.shortCode));
     await db.delete(clicks).where(eq(clicks.shortCode, body.shortCode));
+    await invalidateCachedRedirect(body.shortCode);
     return NextResponse.json({ message: "Link removed" });
   }
 

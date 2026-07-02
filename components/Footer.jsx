@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Github, Heart, Linkedin, Link2 } from "lucide-react";
 import BuyMeACoffee from "@/components/BuyMeACoffee";
+import { MTX_STUDIO_URL } from "@/lib/mtxStudio";
 import { cn } from "@/lib/utils";
-
-const MTX_STUDIO_URL = "https://www.mtxstudio.com";
 
 const linkClass =
   "text-sm text-muted-foreground transition-colors hover:text-foreground";
@@ -29,6 +28,7 @@ const guestLinks = [
 ];
 
 const legalLinks = [
+  { href: "/contact", label: "Contact" },
   { href: "/terms", label: "Terms of Service" },
   { href: "/privacy", label: "Privacy Policy" },
 ];
@@ -123,7 +123,7 @@ export function Footer() {
 
           <FooterLinks title="Product" links={visibleProductLinks} />
           <FooterLinks title="Account" links={visibleGuestLinks} />
-          <FooterLinks title="Legal" links={legalLinks} />
+          <FooterLinks title="Company" links={legalLinks} />
         </div>
       </div>
 

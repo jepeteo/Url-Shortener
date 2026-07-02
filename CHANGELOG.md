@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Admin panel tabs for users, links, and recent clicks with search, suspicious-user flagging, and delete actions
+- Contact page (`/contact`) linking to MTX Studio support channels, with footer and sitemap links
 - Neon Postgres database with Drizzle ORM (replaces MongoDB)
 - `DATABASE_URL` env var, `npm run db:push` / `db:migrate` / `db:studio` scripts
 - Daily cron job to clean up expired links (`/api/cron/cleanup-expired`)

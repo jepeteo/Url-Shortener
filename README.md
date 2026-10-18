@@ -78,6 +78,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
    and copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
 4. Deploy. Apply migrations to Neon before the new code serves traffic
    (`npm run db:migrate` with `DATABASE_URL_UNPOOLED` or `DATABASE_URL`).
+   Production is already baselined: `0000` and `0001` are recorded in `drizzle.__drizzle_migrations`, so the next migrate starts at `0002`.
    Optionally run `npm run seed-demo` for local-style demo data.
 
 ## Environment Variables

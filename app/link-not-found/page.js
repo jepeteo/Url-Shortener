@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { absoluteShortUrl } from "@/lib/abuseReport";
 
-export default function LinkNotFoundPage() {
+export default async function LinkNotFoundPage({ searchParams }) {
+  const params = await searchParams;
+  const reported = absoluteShortUrl(typeof params?.code === "string" ? params.code : "");
+  const reportHref = reported ? `/abuse?url=${encodeURIComponent(reported)}` : "/abuse";
+
   return (
     <div className="flex min-h-[60vh] items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">
@@ -11,7 +16,7 @@ export default function LinkNotFoundPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
-            This short link may have expired, been deleted, or never existed.
+            This short link may have expired, been removed, or never existed.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Button asChild>
@@ -19,6 +24,9 @@ export default function LinkNotFoundPage() {
             </Button>
             <Button variant="outline" asChild>
               <Link href="/app">Shorten a URL</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={reportHref}>Report this link</Link>
             </Button>
           </div>
         </CardContent>

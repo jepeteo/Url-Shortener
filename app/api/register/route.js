@@ -10,6 +10,7 @@ import {
 import { validateCsrf } from "@/lib/csrf";
 import { getDb, users } from "@/lib/db";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 import { sendVerificationEmail } from "@/lib/email";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -87,6 +88,8 @@ export async function POST(request) {
     verificationToken,
     verificationExpires,
   });
+
+  await trackEvent(EVENTS.signup, { plan: "free" });
 
   const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?token=${verificationToken}`;
   try {

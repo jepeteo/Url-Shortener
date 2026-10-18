@@ -29,7 +29,8 @@ export function CookieConsent() {
       className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-lg rounded-xl border bg-card/95 p-4 shadow-lg backdrop-blur sm:left-auto"
     >
       <p className="text-sm text-muted-foreground">
-        We use strictly necessary cookies to keep you signed in. See our{" "}
+        We use strictly necessary cookies to keep you signed in. Page measurement is
+        cookieless. See our{" "}
         <Link href="/privacy" className="text-primary hover:underline">
           Privacy Policy
         </Link>{" "}

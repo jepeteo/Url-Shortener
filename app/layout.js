@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
 import { CookieConsent } from "@/components/CookieConsent";
+import { VercelAnalytics } from "@/components/VercelAnalytics";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -60,6 +61,7 @@ export default function RootLayout({ children }) {
           <Footer />
           <CookieConsent />
         </Providers>
+        <VercelAnalytics />
         <Toaster richColors position="top-center" />
       </body>
     </html>

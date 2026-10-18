@@ -1,3 +1,4 @@
+import { linkNotFoundTarget } from "@/lib/abuseReport";
 import { getDb } from "@/lib/db";
 import { recordClickAsync } from "@/lib/clickTracking";
 import { getCachedRedirect, setCachedRedirect } from "@/lib/redirectCache";
@@ -32,9 +33,9 @@ export async function GET(request, { params }) {
       return temporaryRedirect(urlEntry.originalUrl);
     }
 
-    return temporaryRedirect(new URL("/link-not-found", request.url));
+    return temporaryRedirect(linkNotFoundTarget(request.url, shortCode));
   } catch (error) {
     console.error("Redirect error:", error);
-    return temporaryRedirect(new URL("/link-not-found", request.url));
+    return temporaryRedirect(linkNotFoundTarget(request.url, shortCode));
   }
 }

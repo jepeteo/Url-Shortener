@@ -6,6 +6,14 @@ describe("reservedPaths", () => {
     expect(isReservedPath("api")).toBe(true);
     expect(isReservedPath("mtxadmin")).toBe(true);
     expect(isReservedPath("contact")).toBe(true);
+    expect(isReservedPath("imprint")).toBe(true);
+    expect(isReservedPath("impressum")).toBe(true);
+    expect(isReservedPath("abuse")).toBe(true);
+    expect(isReservedPath("qr-code-generator")).toBe(true);
+    expect(isReservedPath("utm-builder")).toBe(true);
+    expect(isReservedPath("blog")).toBe(true);
+    expect(isReservedPath("el")).toBe(true);
+    expect(isReservedPath("en")).toBe(true);
     expect(isReservedPath("admin")).toBe(true);
   });
 

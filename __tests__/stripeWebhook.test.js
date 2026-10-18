@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as analytics from "../lib/analytics";
 import { stripeEvents, users } from "../db/schema";
 import { processStripeEvent, UnknownStripePriceError } from "../lib/stripeWebhook";
 import { getPlanFromPriceId } from "../lib/stripe";
@@ -70,6 +71,11 @@ describe("getPlanFromPriceId", () => {
 describe("processStripeEvent", () => {
   beforeEach(() => {
     process.env.STRIPE_PRO_PRICE_ID = "price_pro";
+    if (!analytics.trackEvent.mock) {
+      vi.spyOn(analytics, "trackEvent");
+    }
+    analytics.trackEvent.mockResolvedValue({ tracked: true });
+    analytics.trackEvent.mockClear();
   });
 
   it("does not mark a failed handler processed, so a retry can apply it", async () => {
@@ -96,6 +102,11 @@ describe("processStripeEvent", () => {
     expect(db.updates.some((update) => update.table === users && update.values.plan === "pro")).toBe(
       true
     );
+    expect(analytics.trackEvent).toHaveBeenCalledTimes(1);
+    expect(analytics.trackEvent).toHaveBeenCalledWith("upgrade", {
+      plan: "pro",
+      interval: undefined,
+    });
   });
 
   it("ignores an event that was already processed", async () => {
@@ -162,5 +173,30 @@ describe("processStripeEvent", () => {
 
     await processStripeEvent(db, event);
     expect(db.updates.find((update) => update.table === users).values.plan).toBe("pro");
+    expect(analytics.trackEvent).not.toHaveBeenCalled();
+  });
+
+  it("tracks a paid checkout with plan and interval, and ignores a duplicate delivery", async () => {
+    const db = createDb();
+    const event = {
+      id: "evt_upgrade",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          metadata: { userId: "user-1", plan: "business", interval: "annual" },
+          customer: "cus_1",
+          subscription: "sub_1",
+        },
+      },
+    };
+
+    await processStripeEvent(db, event);
+    await processStripeEvent(db, event);
+
+    expect(analytics.trackEvent).toHaveBeenCalledTimes(1);
+    expect(analytics.trackEvent).toHaveBeenCalledWith("upgrade", {
+      plan: "business",
+      interval: "annual",
+    });
   });
 });

@@ -10,11 +10,19 @@ import {
   ArrowRight,
   Check,
 } from "lucide-react";
+import { pageMetadata } from "@/lib/pageMetadata";
 import {
   buildFaqPageSchema,
   buildSoftwareApplicationSchema,
   jsonLdScript,
 } from "@/lib/structuredData";
+
+export const metadata = pageMetadata({
+  title: "mikrouli.link — URL Shortener",
+  description:
+    "Shorten URLs, track clicks, and manage links with mikrouli.link by Theodoros Mentis.",
+  path: "/",
+});
 
 const features = [
   {

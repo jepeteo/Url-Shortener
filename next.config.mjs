@@ -26,8 +26,18 @@ const nextConfig = {
       },
       {
         key: "Content-Security-Policy",
-        value:
-          "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https:; frame-src 'self' https:;",
+        value: [
+          "default-src 'self'",
+          // va.vercel-scripts.com serves Analytics and Speed Insights in development.
+          // vitals.vercel-insights.com receives their beacons. Production also loads
+          // same-origin scripts from /_vercel, which 'self' already allows.
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com https:",
+          "style-src 'self' 'unsafe-inline' https:",
+          "img-src 'self' data: https://va.vercel-scripts.com https://vitals.vercel-insights.com https:",
+          "font-src 'self' data: https:",
+          "connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com https:",
+          "frame-src 'self' https:",
+        ].join("; "),
       },
     ];
 

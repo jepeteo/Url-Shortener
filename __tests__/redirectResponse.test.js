@@ -66,4 +66,19 @@ describe("temporary redirects", () => {
     );
     expect(recordClickAsync).toHaveBeenCalled();
   });
+
+  it("sends a missing short code to the report page", async () => {
+    getCachedRedirect.mockResolvedValueOnce(null);
+    findFirst.mockResolvedValueOnce(null);
+
+    const { GET } = await import("../app/api/[shortCode]/route");
+    const response = await GET(new Request("http://localhost/missing"), {
+      params: Promise.resolve({ shortCode: "missing" }),
+    });
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/link-not-found?code=missing"
+    );
+  });
 });

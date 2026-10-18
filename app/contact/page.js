@@ -2,17 +2,20 @@ import Link from "next/link";
 import { ArrowRight, Mail, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { OPERATOR } from "@/lib/operator";
+import { pageMetadata } from "@/lib/pageMetadata";
 import {
   MTX_STUDIO_CONTACT_URL,
   MTX_STUDIO_EMAIL,
   MTX_STUDIO_URL,
 } from "@/lib/mtxStudio";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Contact — mikrouli.link",
   description:
     "Get in touch about mikrouli.link. Support and enquiries are handled by MTX Studio.",
-};
+  path: "/contact",
+});
 
 const contactMethods = [
   {
@@ -90,10 +93,22 @@ export default function ContactPage() {
         For privacy or legal enquiries, see our{" "}
         <Link href="/privacy" className="text-primary hover:underline">
           Privacy Policy
-        </Link>{" "}
-        and{" "}
+        </Link>
+        ,{" "}
         <Link href="/terms" className="text-primary hover:underline">
           Terms of Service
+        </Link>
+        , and{" "}
+        <Link href="/imprint" className="text-primary hover:underline">
+          imprint
+        </Link>
+        . To report a harmful short link, email{" "}
+        <a className="text-primary hover:underline" href={`mailto:${OPERATOR.abuseEmail}`}>
+          {OPERATOR.abuseEmail}
+        </a>{" "}
+        or use the{" "}
+        <Link href="/abuse" className="text-primary hover:underline">
+          abuse form
         </Link>
         .
       </p>

@@ -29,6 +29,8 @@ const guestLinks = [
 
 const legalLinks = [
   { href: "/contact", label: "Contact" },
+  { href: "/abuse", label: "Report abuse" },
+  { href: "/imprint", label: "Imprint" },
   { href: "/terms", label: "Terms of Service" },
   { href: "/privacy", label: "Privacy Policy" },
 ];

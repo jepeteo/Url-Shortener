@@ -1,5 +1,13 @@
+import { pageMetadata } from "@/lib/pageMetadata";
 import { PLANS } from "@/lib/plans";
 import { buildPricingOfferSchema, jsonLdScript } from "@/lib/structuredData";
+
+export const metadata = pageMetadata({
+  title: "Pricing — mikrouli.link",
+  description:
+    "Free, Pro, and Business plans for mikrouli.link. Start free and upgrade when you need custom aliases, charts, or API access.",
+  path: "/pricing",
+});
 
 const pricingTiers = [
   {

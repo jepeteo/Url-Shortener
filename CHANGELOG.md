@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Vercel Web Analytics and Speed Insights, with server-side `signup`, `link_created`, and `upgrade` events (plan name and billing interval only; query strings and password-reset tokens are stripped from page measurements)
+- Privacy Policy and Terms of Service for MTX STUDIO LTD, effective 18 October 2026
+- Imprint at `/imprint`, with `/impressum` redirecting to it, linked from the footer
+- Abuse report form at `/abuse` (CSRF, honeypot, Turnstile, rate limit) that emails abuse@mikrouli.link, plus a report path from `/link-not-found`
+- Reserved paths for imprint, impressum, abuse, and upcoming routes (`qr-code-generator`, `utm-builder`, `blog`, `el`, `en`)
+- Per-page title, description, and canonical URL for the public marketing pages; sitemap lists those pages only
+
+### Changed
+- Content Security Policy names `va.vercel-scripts.com` and `vitals.vercel-insights.com` so Analytics and Speed Insights can load
+- `robots.txt` also disallows `/auth/` and `/analytics` (API, dashboard, and admin were already disallowed) and still points at the sitemap
+
 ### Fixed
 - Expired links are archived instead of deleted, so short codes and custom aliases are never reissued and click history is kept
 - Monthly link quota counts every link created in the UTC month, including archived links, so deleting a link does not free quota

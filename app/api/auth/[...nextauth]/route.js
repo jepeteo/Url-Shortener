@@ -6,6 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import { getDb, users } from "@/lib/db";
 import { getEffectivePlan } from "@/lib/billing";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { EVENTS, trackEvent } from "@/lib/analytics";
 import { githubEmailIsVerified, resolveGithubAccountLink } from "@/lib/accountLinking";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
@@ -99,6 +100,7 @@ export const authOptions = {
           })
           .returning({ id: users.id });
         user.id = created.id;
+        await trackEvent(EVENTS.signup, { plan: "free" });
         return true;
       }
 

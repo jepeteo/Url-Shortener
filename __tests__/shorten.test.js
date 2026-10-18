@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import * as analytics from "../lib/analytics";
 
 const mockInsert = vi.fn();
 const inserted = [];
@@ -22,10 +23,13 @@ vi.mock("../lib/usage", () => ({
   canCreateAnonymousLink: vi.fn().mockResolvedValue({ allowed: true }),
 }));
 
+vi.spyOn(analytics, "trackEvent").mockResolvedValue({ tracked: true });
+
 describe("createShortUrl", () => {
   beforeEach(() => {
     mockInsert.mockReset();
     inserted.length = 0;
+    analytics.trackEvent.mockClear();
     process.env.NEXT_PUBLIC_BASE_URL = "http://localhost:3000";
   });
 
@@ -34,6 +38,7 @@ describe("createShortUrl", () => {
     const result = await createShortUrl({ originalUrl: "javascript:alert(1)" });
     expect(result.error).toBeTruthy();
     expect(result.status).toBe(400);
+    expect(analytics.trackEvent).not.toHaveBeenCalled();
   });
 
   it("rejects reserved aliases", async () => {
@@ -70,6 +75,7 @@ describe("createShortUrl", () => {
     expect(result.creatorToken).toBeNull();
     expect(inserted[0].creatorTokenHash).toBeNull();
     expect(mockInsert).toHaveBeenCalledOnce();
+    expect(analytics.trackEvent).toHaveBeenCalledWith("link_created", { plan: "free" });
   });
 
   it("stores a creator token hash for anonymous links", async () => {
@@ -84,6 +90,8 @@ describe("createShortUrl", () => {
     expect(inserted[0].isAnonymous).toBe(true);
     expect(inserted[0].creatorTokenHash).toMatch(/^[a-f0-9]{64}$/);
     expect(inserted[0].creatorTokenHash).not.toBe(result.creatorToken);
+    expect(analytics.trackEvent).toHaveBeenCalledWith("link_created", { plan: "free" });
+    expect(analytics.trackEvent.mock.calls[0][1]).not.toHaveProperty("ip");
   });
 
   it("returns conflict when alias is taken", async () => {

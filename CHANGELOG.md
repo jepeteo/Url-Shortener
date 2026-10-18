@@ -97,8 +97,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Stripe webhook errors no longer leak internal exception messages
 
 ### Security
-- Dependency floors for transitive `next`, `next-auth`, `nanoid`, `postcss`, `sharp`, `js-yaml`, `fast-uri`, `browserslist`, `source-map-js`, and `brace-expansion` advisories. `braces` is pinned to a local 3.0.4 depth cap because upstream 3.0.3 has no patched release (CVE-2026-93687)
 - Archived links do not redirect, and short codes stay reserved after expiry, user delete, and admin removal
+- CI audits production dependencies only. The remaining high advisory is `braces` through Tailwind, and upstream 3.0.3 has no patched release. `tailwindcss-animate` is a build plugin, so it lives with the other dev dependencies and no longer pulls that advisory into production. `next` still pins `postcss@8.4.31`, so production installs force the direct `postcss@^8` release (currently 8.5.30)
 - Claiming an anonymous link requires the httpOnly creator cookie from the browser that created it
 - GitHub OAuth cannot take over an unverified email/password account
 - CSRF tokens required on `/api/shorten`, URL delete, API key generation, claim, and Stripe routes

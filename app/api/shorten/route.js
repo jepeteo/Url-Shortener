@@ -5,6 +5,11 @@ import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { createShortUrl } from "@/lib/shorten";
 import { getSessionUser } from "@/lib/auth";
 import { validateCsrf } from "@/lib/csrf";
+import {
+  CREATOR_COOKIE_NAME,
+  appendCreatorToken,
+  creatorCookieOptions,
+} from "@/lib/creatorToken";
 
 export async function POST(request) {
   if (!validateCsrf(request)) {
@@ -45,9 +50,22 @@ export async function POST(request) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     shortUrl: result.shortUrl,
     shortCode: result.shortCode,
     expiresAt: result.expiresAt,
   });
+
+  if (result.creatorToken) {
+    response.cookies.set(
+      CREATOR_COOKIE_NAME,
+      appendCreatorToken(
+        request.cookies.get(CREATOR_COOKIE_NAME)?.value,
+        result.creatorToken
+      ),
+      creatorCookieOptions()
+    );
+  }
+
+  return response;
 }

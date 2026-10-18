@@ -29,6 +29,17 @@ function SignInForm() {
     if (searchParams.get("error") === "invalid-token") {
       setError("Verification link is invalid or has expired. Sign in and resend verification.");
     }
+    if (searchParams.get("error") === "unverified-email") {
+      setError(
+        "An account with this email already exists and is not verified. Sign in with your password and verify the email before using GitHub. If you did not create it, reset the password."
+      );
+    }
+    if (searchParams.get("error") === "provider-email-unverified") {
+      setError("GitHub has not verified this email address. Verify it with GitHub, then try again.");
+    }
+    if (searchParams.get("error") === "github-mismatch") {
+      setError("This email is already linked to a different GitHub account.");
+    }
   }, [searchParams]);
 
   const handleSubmit = async (event) => {

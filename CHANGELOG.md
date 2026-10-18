@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Fixed
+- Expired links are archived instead of deleted, so short codes and custom aliases are never reissued and click history is kept
+- Monthly link quota counts every link created in the UTC month, including archived links, so deleting a link does not free quota
+- Month boundaries for link quotas use UTC
+- Redirects are temporary (307) with `Cache-Control: private, no-store`; the redirect cache stores link expiry and stops serving a link as soon as it expires
+- Anonymous link claims require the creator token cookie set when the link was created
+- GitHub sign-in no longer links onto an unverified password account
+- Clicks are recorded with Next.js `after()` so the platform waits for the write without delaying the redirect
+- Stripe webhook events are marked processed only after the handler succeeds, so a failed delivery can be retried
+- Checkout reuses an existing Stripe customer instead of passing `customer_email`
+- Unknown Stripe price IDs no longer change a subscription to the free plan
+- Rate-limit counters apply their TTL in the same Redis command as the increment
 - Redirect cache now invalidated when links expire (cron) or are deleted (admin/user delete)
 - Paid analytics (charts, click history, CSV export) gated by plan on API and UI
 - `past_due` subscriptions no longer grant Pro/Business features until billing is active again
@@ -86,6 +97,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Stripe webhook errors no longer leak internal exception messages
 
 ### Security
+- Archived links do not redirect, and short codes stay reserved after expiry, user delete, and admin removal
+- CI audits production dependencies only. The remaining high advisory is `braces` through Tailwind, and upstream 3.0.3 has no patched release. `tailwindcss-animate` is a build plugin, so it lives with the other dev dependencies and no longer pulls that advisory into production. `next` still pins `postcss@8.4.31`, so production installs force the direct `postcss@^8` release (currently 8.5.30)
+- Claiming an anonymous link requires the httpOnly creator cookie from the browser that created it
+- GitHub OAuth cannot take over an unverified email/password account
 - CSRF tokens required on `/api/shorten`, URL delete, API key generation, claim, and Stripe routes
 - Rate limiting no longer silently falls back to in-memory storage in production
 - Click IP addresses are anonymized (IPv4 /24, IPv6 /48) before storage for GDPR compliance

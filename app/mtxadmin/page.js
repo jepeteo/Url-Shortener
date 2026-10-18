@@ -169,7 +169,9 @@ export default function AdminPage() {
   };
 
   const handleDeleteLink = async (url) => {
-    if (!window.confirm(`Delete /${url.shortCode}?`)) return;
+    if (!window.confirm(`Archive /${url.shortCode}? It will stop redirecting and the code cannot be reused.`)) {
+      return;
+    }
 
     const response = await fetchWithCsrf("/api/admin", {
       method: "DELETE",
@@ -178,19 +180,15 @@ export default function AdminPage() {
     });
 
     if (!response.ok) {
-      window.alert("Failed to delete link");
+      window.alert("Failed to archive link");
       return;
     }
 
     setData((prev) => ({
       ...prev,
-      urls: prev.urls.filter((row) => row.id !== url.id),
-      clicks: prev.clicks.filter((row) => row.shortCode !== url.shortCode),
-      stats: {
-        ...prev.stats,
-        links: Math.max(0, prev.stats.links - 1),
-        totalClicks: Math.max(0, prev.stats.totalClicks - Number(url.clicks || 0)),
-      },
+      urls: prev.urls.map((row) =>
+        row.id === url.id ? { ...row, archivedAt: new Date().toISOString() } : row
+      ),
     }));
   };
 
@@ -426,7 +424,12 @@ export default function AdminPage() {
                 ) : (
                   filteredLinks.map((url) => (
                     <TableRow key={url.id}>
-                      <TableCell className="font-medium">/{url.shortCode}</TableCell>
+                      <TableCell className="font-medium">
+                        /{url.shortCode}
+                        {url.archivedAt ? (
+                          <span className="ml-2 text-xs text-muted-foreground">Archived</span>
+                        ) : null}
+                      </TableCell>
                       <TableCell className="max-w-xs">
                         <a
                           href={url.originalUrl}
@@ -454,14 +457,18 @@ export default function AdminPage() {
                         {formatDate(url.createdAt)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteLink(url)}
-                        >
-                          <Trash2 className="mr-1 h-4 w-4" />
-                          Delete
-                        </Button>
+                        {url.archivedAt ? (
+                          <span className="text-xs text-muted-foreground">Kept</span>
+                        ) : (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteLink(url)}
+                          >
+                            <Trash2 className="mr-1 h-4 w-4" />
+                            Archive
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

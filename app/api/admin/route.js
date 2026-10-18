@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { count, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { count, desc, eq, isNull, sql } from "drizzle-orm";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { validateCsrf } from "@/lib/csrf";
 import { getDb, clicks, urls, users } from "@/lib/db";
@@ -75,6 +75,7 @@ export async function GET() {
         isAnonymous: urls.isAnonymous,
         createdAt: urls.createdAt,
         expiresAt: urls.expiresAt,
+        archivedAt: urls.archivedAt,
         userEmail: users.email,
         userName: users.name,
       })
@@ -146,10 +147,11 @@ export async function DELETE(request) {
       .from(urls)
       .where(eq(urls.userId, body.userId));
 
-    const urlIds = userUrls.map((row) => row.id);
-    if (urlIds.length > 0) {
-      await db.delete(clicks).where(inArray(clicks.urlId, urlIds));
-      await db.delete(urls).where(eq(urls.userId, body.userId));
+    if (userUrls.length > 0) {
+      await db
+        .update(urls)
+        .set({ archivedAt: new Date(), userId: null })
+        .where(eq(urls.userId, body.userId));
       await Promise.all(
         userUrls.map((row) => invalidateCachedRedirect(row.shortCode))
       );
@@ -160,10 +162,12 @@ export async function DELETE(request) {
   }
 
   if (body.shortCode) {
-    await db.delete(urls).where(eq(urls.shortCode, body.shortCode));
-    await db.delete(clicks).where(eq(clicks.shortCode, body.shortCode));
+    await db
+      .update(urls)
+      .set({ archivedAt: new Date() })
+      .where(eq(urls.shortCode, body.shortCode));
     await invalidateCachedRedirect(body.shortCode);
-    return NextResponse.json({ message: "Link removed" });
+    return NextResponse.json({ message: "Link archived" });
   }
 
   return NextResponse.json({ error: "shortCode or userId required" }, { status: 400 });

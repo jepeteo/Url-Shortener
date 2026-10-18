@@ -73,19 +73,26 @@ describe("checkRateLimit with Upstash", () => {
     vi.restoreAllMocks();
   });
 
-  it("uses Upstash when configured", async () => {
+  it("increments and sets the TTL in one atomic command", async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ result: 1 }),
     });
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ result: "OK" }),
-    });
 
     const { checkRateLimit } = await import("../lib/rateLimit");
     expect(await checkRateLimit("upstash-user", { limit: 5, windowMs: 60_000 })).toBe(true);
-    expect(fetch).toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toBe("https://example.upstash.io");
+    expect(init.method).toBe("POST");
+    const command = JSON.parse(init.body);
+    expect(command[0]).toBe("EVAL");
+    expect(command[1]).toContain("INCR");
+    expect(command[1]).toContain("EXPIRE");
+    expect(command[2]).toBe("1");
+    expect(command[3]).toBe("ratelimit:upstash-user");
+    expect(command[4]).toBe("60");
   });
 
   it("fails closed in production when Upstash request fails", async () => {

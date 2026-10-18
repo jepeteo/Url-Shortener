@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { and, count, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
+import { and, count, desc, sql } from "drizzle-orm";
 import { getDb, urls } from "@/lib/db";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { ownerVisibleWhere, unexpired } from "@/lib/urlVisibility";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -25,24 +26,19 @@ export async function GET(request) {
     db
       .select()
       .from(urls)
-      .where(eq(urls.userId, userId))
+      .where(ownerVisibleWhere(userId))
       .orderBy(desc(urls.createdAt))
       .limit(limit)
       .offset(offset),
     db
       .select({ count: count() })
       .from(urls)
-      .where(
-        and(
-          eq(urls.userId, userId),
-          or(gt(urls.expiresAt, now), isNull(urls.expiresAt))
-        )
-      ),
+      .where(and(ownerVisibleWhere(userId), unexpired(now))),
     db
       .select({ totalClicks: sql`coalesce(sum(${urls.clicks}), 0)` })
       .from(urls)
-      .where(eq(urls.userId, userId)),
-    db.select({ count: count() }).from(urls).where(eq(urls.userId, userId)),
+      .where(ownerVisibleWhere(userId)),
+    db.select({ count: count() }).from(urls).where(ownerVisibleWhere(userId)),
   ]);
 
   return NextResponse.json({

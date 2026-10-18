@@ -26,7 +26,7 @@ Authentication, billing, and API key storage.
 | `api_key_created_at` | `apiKeyCreatedAt` | timestamptz | When current API key was generated |
 | `created_at` | `createdAt` | timestamptz | Account creation |
 
-**Indexes:** unique on `email`
+**Indexes:** unique on `email`; btree on `stripe_customer_id`, `stripe_subscription_id`, and `api_key_hash`
 
 ## `urls`
 
@@ -40,9 +40,11 @@ Short link records.
 | `user_id` | `userId` | uuid FK | Owner, null if anonymous |
 | `is_anonymous` | `isAnonymous` | boolean | Created without auth |
 | `claimed_at` | `claimedAt` | timestamptz | When anonymous link was claimed |
+| `creator_token_hash` | `creatorTokenHash` | text | SHA-256 of the anonymous creator cookie token |
 | `clicks` | `clicks` | integer | Denormalized click counter |
 | `last_clicked_at` | `lastClickedAt` | timestamptz | Last click timestamp |
 | `expires_at` | `expiresAt` | timestamptz | null = never expires |
+| `archived_at` | `archivedAt` | timestamptz | Set when expired or removed; row and short code stay |
 | `created_at` | `createdAt` | timestamptz | Link creation |
 
 **Indexes:**
@@ -50,8 +52,10 @@ Short link records.
 - unique on `short_code`
 - compound on `user_id` + `created_at`
 - compound on `short_code` + `expires_at`
+- compound on `user_id` + `archived_at`
+- btree on `expires_at`
 
-Expired links are removed by the daily cron job at `/api/cron/cleanup-expired`.
+Expired links are archived by the daily cron at `/api/cron/cleanup-expired`. Archived rows do not redirect and stay hidden from user lists. Short codes are not reused. User and admin removal archive the row as well.
 
 ## `clicks`
 
@@ -77,9 +81,10 @@ Webhook idempotency log.
 |-------------|---------------|------|-------|
 | `id` | `id` | text PK | Stripe event id |
 | `type` | `type` | text | Event type |
-| `received_at` | `receivedAt` | timestamptz | Processing timestamp |
+| `received_at` | `receivedAt` | timestamptz | When the event was first stored |
+| `processed_at` | `processedAt` | timestamptz | Set only after the handler succeeds |
 
-Duplicate inserts raise Postgres unique violation (`23505`) and are ignored.
+A duplicate event id is ignored once `processed_at` is set. A row with `processed_at` null is retried.
 
 ## Data access layer
 

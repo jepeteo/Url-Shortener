@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { getStripe, getPlanFromPriceId } from "@/lib/stripe";
-import { getDb, stripeEvents, users, isUniqueViolation } from "@/lib/db";
+import { getStripe } from "@/lib/stripe";
+import { getDb } from "@/lib/db";
+import { processStripeEvent } from "@/lib/stripeWebhook";
 
 export async function POST(request) {
   const stripe = getStripe();
@@ -27,61 +27,10 @@ export async function POST(request) {
   const db = getDb();
 
   try {
-    await db.insert(stripeEvents).values({
-      id: event.id,
-      type: event.type,
-    });
+    const result = await processStripeEvent(db, event);
+    return NextResponse.json({ received: true, duplicate: Boolean(result.duplicate) });
   } catch (error) {
-    if (isUniqueViolation(error)) {
-      return NextResponse.json({ received: true, duplicate: true });
-    }
-    throw error;
+    console.error("Stripe webhook handler failed:", error);
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
-
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    const userId = session.metadata?.userId;
-    const plan = session.metadata?.plan || "pro";
-
-    if (userId) {
-      await db
-        .update(users)
-        .set({
-          plan,
-          paymentStatus: "active",
-          stripeCustomerId: session.customer,
-          stripeSubscriptionId: session.subscription,
-        })
-        .where(eq(users.id, userId));
-    }
-  }
-
-  if (
-    event.type === "customer.subscription.updated" ||
-    event.type === "customer.subscription.deleted"
-  ) {
-    const subscription = event.data.object;
-    const priceId = subscription.items?.data?.[0]?.price?.id;
-    const plan =
-      event.type === "customer.subscription.deleted"
-        ? "free"
-        : getPlanFromPriceId(priceId);
-
-    await db
-      .update(users)
-      .set({ plan, paymentStatus: subscription.status || "active" })
-      .where(eq(users.stripeSubscriptionId, subscription.id));
-  }
-
-  if (event.type === "invoice.payment_failed") {
-    const invoice = event.data.object;
-    if (invoice.customer) {
-      await db
-        .update(users)
-        .set({ paymentStatus: "past_due" })
-        .where(eq(users.stripeCustomerId, invoice.customer));
-    }
-  }
-
-  return NextResponse.json({ received: true });
 }

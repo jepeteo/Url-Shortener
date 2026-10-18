@@ -2,10 +2,11 @@ import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb, users } from "@/lib/db";
 import { getEffectivePlan } from "@/lib/billing";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+import { githubEmailIsVerified, resolveGithubAccountLink } from "@/lib/accountLinking";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .split(",")
@@ -60,35 +61,53 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "github") {
-        const db = getDb();
-        const existingUser = await db.query.users.findFirst({
-          where: eq(users.email, user.email),
-        });
-
-        if (!existingUser) {
-          const [created] = await db
-            .insert(users)
-            .values({
-              name: user.name,
-              email: user.email,
-              githubId: account.providerAccountId,
-              plan: "free",
-              emailVerified: new Date(),
-            })
-            .returning({ id: users.id });
-          user.id = created.id;
-        } else {
-          user.id = existingUser.id;
-          if (!existingUser.emailVerified) {
-            await db
-              .update(users)
-              .set({ emailVerified: new Date() })
-              .where(eq(users.id, existingUser.id));
-          }
-        }
+    async signIn({ user, account, profile }) {
+      if (account?.provider !== "github") {
         return true;
+      }
+
+      const email = user.email?.toLowerCase().trim();
+      if (!email) {
+        return false;
+      }
+      user.email = email;
+
+      const db = getDb();
+      const existingUser = await db.query.users.findFirst({
+        where: sql`lower(${users.email}) = ${email}`,
+      });
+
+      const decision = resolveGithubAccountLink({
+        existingUser,
+        providerAccountId: account.providerAccountId,
+        providerEmailVerified: githubEmailIsVerified(profile, email),
+      });
+
+      if (decision.action === "reject") {
+        return `/auth/signin?error=${encodeURIComponent(decision.reason)}`;
+      }
+
+      if (decision.action === "create") {
+        const [created] = await db
+          .insert(users)
+          .values({
+            name: user.name,
+            email,
+            githubId: account.providerAccountId,
+            plan: "free",
+            emailVerified: new Date(),
+          })
+          .returning({ id: users.id });
+        user.id = created.id;
+        return true;
+      }
+
+      user.id = existingUser.id;
+      if (!existingUser.githubId && account.providerAccountId) {
+        await db
+          .update(users)
+          .set({ githubId: account.providerAccountId })
+          .where(eq(users.id, existingUser.id));
       }
       return true;
     },

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getDb } from "@/lib/db";
 import { getStripe, getStripePriceId } from "@/lib/stripe";
+import { reuseOrCreateStripeCustomer } from "@/lib/stripeCustomer";
 import { validateCsrf } from "@/lib/csrf";
 
 export async function POST(request) {
@@ -10,7 +12,7 @@ export async function POST(request) {
   }
 
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  if (!session?.user?.id || !session?.user?.email) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
@@ -33,9 +35,20 @@ export async function POST(request) {
     );
   }
 
+  const customerId = await reuseOrCreateStripeCustomer({
+    stripe,
+    db: getDb(),
+    userId: session.user.id,
+    email: session.user.email,
+  });
+
+  if (!customerId) {
+    return NextResponse.json({ error: "Account not found" }, { status: 404 });
+  }
+
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "subscription",
-    customer_email: session.user.email,
+    customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?upgraded=1`,
     cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/pricing`,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { lt } from "drizzle-orm";
+import { and, isNull, lt } from "drizzle-orm";
 import { getDb, urls } from "@/lib/db";
 import { invalidateCachedRedirect } from "@/lib/redirectCache";
 
@@ -14,14 +14,15 @@ export async function GET(request) {
   const db = getDb();
   const now = new Date();
 
-  const deleted = await db
-    .delete(urls)
-    .where(lt(urls.expiresAt, now))
+  const archived = await db
+    .update(urls)
+    .set({ archivedAt: now })
+    .where(and(lt(urls.expiresAt, now), isNull(urls.archivedAt)))
     .returning({ shortCode: urls.shortCode });
 
   await Promise.all(
-    deleted.map((row) => invalidateCachedRedirect(row.shortCode))
+    archived.map((row) => invalidateCachedRedirect(row.shortCode))
   );
 
-  return NextResponse.json({ deleted: deleted.length });
+  return NextResponse.json({ archived: archived.length });
 }

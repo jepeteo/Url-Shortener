@@ -4,6 +4,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getDb, urls } from "@/lib/db";
 import { validateCsrf } from "@/lib/csrf";
+import { CREATOR_COOKIE_NAME, creatorTokenMatches } from "@/lib/creatorToken";
 
 export async function POST(request) {
   if (!validateCsrf(request)) {
@@ -21,24 +22,39 @@ export async function POST(request) {
   }
 
   const db = getDb();
+  const link = await db.query.urls.findFirst({
+    where: and(
+      eq(urls.shortCode, shortCode),
+      isNull(urls.userId),
+      eq(urls.isAnonymous, true),
+      isNull(urls.archivedAt)
+    ),
+  });
+
+  const cookie = request.cookies.get(CREATOR_COOKIE_NAME)?.value;
+  if (!link || !creatorTokenMatches(cookie, link.creatorTokenHash)) {
+    return NextResponse.json(
+      { error: "Link not found or already claimed" },
+      { status: 404 }
+    );
+  }
+
   const claimed = await db
     .update(urls)
     .set({
       userId: session.user.id,
       isAnonymous: false,
       claimedAt: new Date(),
+      creatorTokenHash: null,
     })
-    .where(
-      and(
-        eq(urls.shortCode, shortCode),
-        isNull(urls.userId),
-        eq(urls.isAnonymous, true)
-      )
-    )
+    .where(and(eq(urls.id, link.id), isNull(urls.userId)))
     .returning({ id: urls.id });
 
   if (claimed.length === 0) {
-    return NextResponse.json({ error: "Link not found or already claimed" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Link not found or already claimed" },
+      { status: 404 }
+    );
   }
 
   return NextResponse.json({ message: "Link claimed successfully" });

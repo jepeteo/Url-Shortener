@@ -1,9 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const mockInsert = vi.fn();
+const inserted = [];
 const mockDb = {
   insert: vi.fn(() => ({
-    values: vi.fn().mockImplementation(() => mockInsert()),
+    values: vi.fn((values) => {
+      inserted.push(values);
+      return mockInsert();
+    }),
   })),
 };
 
@@ -15,11 +19,13 @@ vi.mock("../lib/db", () => ({
 
 vi.mock("../lib/usage", () => ({
   canCreateLink: vi.fn().mockResolvedValue({ allowed: true }),
+  canCreateAnonymousLink: vi.fn().mockResolvedValue({ allowed: true }),
 }));
 
 describe("createShortUrl", () => {
   beforeEach(() => {
     mockInsert.mockReset();
+    inserted.length = 0;
     process.env.NEXT_PUBLIC_BASE_URL = "http://localhost:3000";
   });
 
@@ -61,7 +67,23 @@ describe("createShortUrl", () => {
     });
     expect(result.shortCode).toBeTruthy();
     expect(result.shortUrl).toContain("http://localhost:3000/");
+    expect(result.creatorToken).toBeNull();
+    expect(inserted[0].creatorTokenHash).toBeNull();
     expect(mockInsert).toHaveBeenCalledOnce();
+  });
+
+  it("stores a creator token hash for anonymous links", async () => {
+    mockInsert.mockResolvedValue(undefined);
+    const { createShortUrl } = await import("../lib/shorten");
+    const result = await createShortUrl({
+      originalUrl: "https://example.com",
+      ip: "203.0.113.10",
+    });
+
+    expect(result.creatorToken).toMatch(/^[a-f0-9]{64}$/);
+    expect(inserted[0].isAnonymous).toBe(true);
+    expect(inserted[0].creatorTokenHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(inserted[0].creatorTokenHash).not.toBe(result.creatorToken);
   });
 
   it("returns conflict when alias is taken", async () => {

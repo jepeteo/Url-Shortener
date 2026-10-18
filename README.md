@@ -54,10 +54,10 @@ NEXTAUTH_URL=http://localhost:3000
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-3. Push the database schema to Neon:
+3. Apply the database schema to Neon:
 
 ```bash
-npm run db:push
+npm run db:migrate
 ```
 
 4. Run the development server:
@@ -76,8 +76,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
    **Upstash Redis is required in production** for rate limiting and redirect caching.
 3. Configure a Stripe webhook pointing to `https://your-domain/api/stripe/webhook`
    and copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
-4. Deploy. After the first deploy, run `npm run db:push` against your Neon database
-   and optionally `npm run seed-demo` for local-style demo data.
+4. Deploy. Apply migrations to Neon before the new code serves traffic
+   (`npm run db:migrate` with `DATABASE_URL_UNPOOLED` or `DATABASE_URL`).
+   Optionally run `npm run seed-demo` for local-style demo data.
 
 ## Environment Variables
 
@@ -89,7 +90,7 @@ See `.env.example` for the full list. Key variables:
 | `CRON_SECRET` | Yes in production | Bearer token for the expired-link cleanup cron job |
 | `NEXTAUTH_SECRET` | Yes | Long random secret for NextAuth |
 | `NEXTAUTH_URL` / `NEXT_PUBLIC_BASE_URL` | Yes | App base URL |
-| `GITHUB_ID` / `GITHUB_SECRET` | No | GitHub OAuth login (auto-verifies email; links accounts with the same email) |
+| `GITHUB_ID` / `GITHUB_SECRET` | No | GitHub OAuth. Links an existing account only after that email is verified |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | No | Cloudflare Turnstile for registration bot protection |
 | `RESEND_API_KEY` / `EMAIL_FROM` | No | Password-reset emails |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | **Yes in production** | Rate limiting and redirect cache |

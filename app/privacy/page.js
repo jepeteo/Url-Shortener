@@ -30,8 +30,7 @@ export default function PrivacyPage() {
           <a className="text-primary hover:underline" href={`mailto:${OPERATOR.contactEmail}`}>
             {OPERATOR.contactEmail}
           </a>
-          . We are not registered for VAT, and we do not yet hold an ICO registration
-          number.
+          . We are not registered for VAT.
         </p>
         <p>
           This policy is written for the UK GDPR and the EU GDPR. The same practical

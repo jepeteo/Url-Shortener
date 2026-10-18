@@ -74,13 +74,11 @@ export default function ImprintPage() {
             </p>
           )}
         </Fact>
-        <Fact label="Data protection registration">
-          <p>
-            {OPERATOR.icoNumber
-              ? `ICO registration number: ${OPERATOR.icoNumber}`
-              : "No Information Commissioner's Office (ICO) registration number is held."}
-          </p>
-        </Fact>
+        {OPERATOR.icoNumber ? (
+          <Fact label="Data protection registration">
+            <p>ICO registration number: {OPERATOR.icoNumber}</p>
+          </Fact>
+        ) : null}
       </dl>
     </LegalDocument>
   );

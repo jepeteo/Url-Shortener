@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Per-page title, description, and canonical URL for the public marketing pages; sitemap lists those pages only
 
 ### Changed
+- Imprint and privacy show an ICO registration number only when one is set, and say nothing about it otherwise
 - Content Security Policy names `va.vercel-scripts.com` and `vitals.vercel-insights.com` so Analytics and Speed Insights can load
 - `robots.txt` also disallows `/auth/` and `/analytics` (API, dashboard, and admin were already disallowed) and still points at the sitemap
 

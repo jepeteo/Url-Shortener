@@ -71,4 +71,26 @@ describe("legal pages", () => {
       expect(source).toContain("OPERATOR");
     }
   });
+
+  it("does not say that no ICO registration number is held", () => {
+    const files = [
+      "app/privacy/page.js",
+      "app/terms/page.js",
+      "app/imprint/page.js",
+      "app/contact/page.js",
+    ];
+    for (const file of files) {
+      const source = readFileSync(file, "utf8");
+      expect(source).not.toMatch(/no ICO/i);
+      expect(source).not.toMatch(/do not yet hold an ICO/i);
+      expect(source).not.toMatch(/registration number is held/i);
+    }
+  });
+
+  it("shows an ICO number on the imprint only when one is set", () => {
+    const source = readFileSync("app/imprint/page.js", "utf8");
+    expect(source).toContain("OPERATOR.icoNumber");
+    expect(source).toContain("ICO registration number:");
+    expect(source).toContain("not registered for VAT");
+  });
 });

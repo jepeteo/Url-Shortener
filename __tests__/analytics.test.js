@@ -18,9 +18,34 @@ describe("analyticsProperties", () => {
     expect(analyticsProperties({ plan: "Pro", interval: "weekly" })).toEqual({});
     expect(analyticsProperties(null)).toEqual({});
   });
+
+  it("keeps an expiry stage and a restore count, and drops personal fields", () => {
+    expect(
+      analyticsProperties({
+        stage: "expired",
+        count: 3,
+        email: "person@example.com",
+        userId: "user-1",
+        shortCode: "abc",
+      })
+    ).toEqual({ stage: "expired", count: 3 });
+    expect(analyticsProperties({ stage: "soon", count: 1.5 })).toEqual({});
+    expect(analyticsProperties({ count: 10001 })).toEqual({});
+  });
 });
 
 describe("trackEvent", () => {
+  it("sends an expiry reminder stage without personal fields", async () => {
+    const track = vi.fn().mockResolvedValue(undefined);
+    const result = await trackEvent(
+      EVENTS.expiryEmailSent,
+      { stage: "today", email: "person@example.com" },
+      track
+    );
+    expect(result.tracked).toBe(true);
+    expect(track).toHaveBeenCalledWith("expiry_email_sent", { stage: "today" });
+  });
+
   it("sends a signup without personal fields", async () => {
     const track = vi.fn().mockResolvedValue(undefined);
     const result = await trackEvent(

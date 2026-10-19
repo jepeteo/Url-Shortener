@@ -36,37 +36,7 @@ import { QRModal } from "@/components/QRModal";
 import { toast } from "sonner";
 import { fetchWithCsrf } from "@/hooks/useCsrf";
 import { cn } from "@/lib/utils";
-
-function getLinkStatus(expiresAt) {
-  if (expiresAt === null || expiresAt === undefined) {
-    return {
-      label: "Active",
-      detail: "Never expires",
-      className: "bg-success/15 text-success",
-    };
-  }
-
-  const expiry = new Date(expiresAt);
-  const now = new Date();
-
-  if (expiry <= now) {
-    return {
-      label: "Expired",
-      detail: `Expired on ${expiry.toLocaleDateString()}`,
-      className: "bg-destructive/15 text-destructive",
-    };
-  }
-
-  const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  const detail =
-    daysLeft === 1 ? "Expires in 1 day" : `Expires in ${daysLeft} days`;
-
-  return {
-    label: "Active",
-    detail,
-    className: "bg-success/15 text-success",
-  };
-}
+import { getLinkStatus } from "@/lib/expiry/display";
 
 function LinkStatusBadge({ expiresAt }) {
   const status = getLinkStatus(expiresAt);
@@ -116,6 +86,7 @@ export default function DashboardContent({
   isLoading,
   error,
   onRefresh,
+  plan = "free",
 }) {
   const [showQR, setShowQR] = useState(null);
   const [sortMethod, setSortMethod] = useState("createdAt");
@@ -181,7 +152,7 @@ export default function DashboardContent({
     });
   }, [urls, sortMethod]);
 
-  const qrCode = showQR ? urls.find((u) => u.id === showQR)?.shortCode : null;
+  const qrLink = showQR ? urls.find((u) => u.id === showQR) : null;
 
   if (isLoading) {
     return <p className="text-muted-foreground">Loading your links...</p>;
@@ -389,7 +360,14 @@ export default function DashboardContent({
         </nav>
       )}
 
-      {qrCode && <QRModal shortCode={qrCode} onClose={() => setShowQR(null)} />}
+      {qrLink && (
+        <QRModal
+          shortCode={qrLink.shortCode}
+          expiresAt={qrLink.expiresAt}
+          plan={plan}
+          onClose={() => setShowQR(null)}
+        />
+      )}
     </>
   );
 }

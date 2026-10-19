@@ -15,6 +15,13 @@
       "when": 1792338741125,
       "tag": "0001_link_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792413658644,
+      "tag": "0002_expiry_reminders",
+      "breakpoints": true
     }
   ]
 }

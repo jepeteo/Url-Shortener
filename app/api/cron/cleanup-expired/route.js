@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { and, isNull, lt } from "drizzle-orm";
-import { getDb, urls } from "@/lib/db";
-import { invalidateCachedRedirect } from "@/lib/redirectCache";
+import { getDb } from "@/lib/db";
+import { runExpiryMaintenance } from "@/lib/expiry/maintenance";
 
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
@@ -11,18 +10,14 @@ export async function GET(request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getDb();
-  const now = new Date();
+  const dryRun =
+    new URL(request.url).searchParams.get("dryRun") === "1" ||
+    process.env.EXPIRY_EMAIL_DRY_RUN === "1";
 
-  const archived = await db
-    .update(urls)
-    .set({ archivedAt: now })
-    .where(and(lt(urls.expiresAt, now), isNull(urls.archivedAt)))
-    .returning({ shortCode: urls.shortCode });
+  const result = await runExpiryMaintenance({
+    db: getDb(),
+    dryRun,
+  });
 
-  await Promise.all(
-    archived.map((row) => invalidateCachedRedirect(row.shortCode))
-  );
-
-  return NextResponse.json({ archived: archived.length });
+  return NextResponse.json(result, { status: result.failed > 0 ? 500 : 200 });
 }

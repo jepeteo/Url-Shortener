@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Expiry reminder digests for verified accounts: one email three days before a link expires, one on the expiry day, and one after the daily job archives it. One email per user per stage, sent at most once per link (`expiry_emails`). Each message links to pricing or the dashboard and includes a signed one-click unsubscribe (`users.email_preferences`)
+- QR code PNG and SVG download, with the expiry date on the download and on dashboard rows
+- Server analytics events `expiry_email_sent` (stage) and `restore_after_upgrade` (count). Properties still exclude personal data
 - Vercel Web Analytics and Speed Insights, with server-side `signup`, `link_created`, and `upgrade` events (plan name and billing interval only; query strings and password-reset tokens are stripped from page measurements)
 - Privacy Policy and Terms of Service for MTX STUDIO LTD, effective 18 October 2026
 - Imprint at `/imprint`, with `/impressum` redirecting to it, linked from the footer
@@ -15,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Per-page title, description, and canonical URL for the public marketing pages; sitemap lists those pages only
 
 ### Changed
+- The daily cleanup cron sends the reminder digests and then archives expired links. `?dryRun=1` (or `EXPIRY_EMAIL_DRY_RUN=1`) previews the counts without writing or sending. Admins can open `/api/admin/expiry-email-preview` to read a sample
+- An active upgrade (checkout, or a subscription that becomes active or moves up a plan) restores links archived because they expired and extends live links to the new plan default when that date is later. User and admin archives are left alone. `urls.archive_reason` tells those apart
 - Imprint and privacy show an ICO registration number only when one is set, and say nothing about it otherwise
 - Content Security Policy names `va.vercel-scripts.com` and `vitals.vercel-insights.com` so Analytics and Speed Insights can load
 - `robots.txt` also disallows `/auth/` and `/analytics` (API, dashboard, and admin were already disallowed) and still points at the sitemap

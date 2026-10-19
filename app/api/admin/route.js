@@ -5,6 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { validateCsrf } from "@/lib/csrf";
 import { getDb, clicks, urls, users } from "@/lib/db";
 import { invalidateCachedRedirect } from "@/lib/redirectCache";
+import { ARCHIVE_REASONS } from "@/lib/expiry/constants";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .split(",")
@@ -150,7 +151,7 @@ export async function DELETE(request) {
     if (userUrls.length > 0) {
       await db
         .update(urls)
-        .set({ archivedAt: new Date(), userId: null })
+        .set({ archivedAt: new Date(), archiveReason: ARCHIVE_REASONS.admin, userId: null })
         .where(eq(urls.userId, body.userId));
       await Promise.all(
         userUrls.map((row) => invalidateCachedRedirect(row.shortCode))
@@ -164,7 +165,7 @@ export async function DELETE(request) {
   if (body.shortCode) {
     await db
       .update(urls)
-      .set({ archivedAt: new Date() })
+      .set({ archivedAt: new Date(), archiveReason: ARCHIVE_REASONS.admin })
       .where(eq(urls.shortCode, body.shortCode));
     await invalidateCachedRedirect(body.shortCode);
     return NextResponse.json({ message: "Link archived" });

@@ -131,6 +131,7 @@ export default function Dashboard() {
         isLoading={isLoading}
         error={error}
         onRefresh={fetchUrls}
+        plan={usage?.plan || session?.user?.plan || "free"}
       />
     </div>
   );

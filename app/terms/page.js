@@ -128,6 +128,23 @@ export default function TermsPage() {
           redirect. Click history for that link is kept. See the Privacy Policy for
           how long we keep links and clicks.
         </p>
+        <p>
+          If your email is verified and you have not turned expiry reminders off, we
+          email you once when a link&apos;s expiry date is within three days, once on
+          the day it expires, and once after it has been archived. Each email lists
+          the links for that stage. Anonymous links have no email address, so they
+          are not included.
+        </p>
+        <p>
+          When a Free account, or a lapsed paid subscription, becomes an active Pro
+          or Business subscription, links that were archived only because they
+          expired start working again. Links that are still live and have an expiry
+          are given the new plan&apos;s default expiry when that is later than the
+          date they already have (90 days on Pro, one year on Business). Moving from
+          an active Pro plan to Business does the same. Links you removed, or that we
+          removed, stay archived. A renewal of the plan you already have active does
+          not change those dates.
+        </p>
       </LegalSection>
 
       <LegalSection heading="6. Billing and cancellation">

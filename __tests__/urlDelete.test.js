@@ -73,7 +73,7 @@ describe("DELETE /api/urls/[id]", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(sets[0]).toEqual({ archivedAt: expect.any(Date) });
+    expect(sets[0]).toEqual({ archivedAt: expect.any(Date), archiveReason: "user" });
     expect(sets[0].userId).toBeUndefined();
     expect(invalidateCachedRedirect).toHaveBeenCalledWith("alias");
   });

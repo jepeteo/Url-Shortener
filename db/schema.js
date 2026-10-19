@@ -7,6 +7,7 @@ import {
   integer,
   bigint,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable(
@@ -28,6 +29,8 @@ export const users = pgTable(
     paymentStatus: text("payment_status"),
     apiKeyHash: text("api_key_hash"),
     apiKeyCreatedAt: timestamp("api_key_created_at", { withTimezone: true }),
+    // true = send expiry reminder digests. One-click unsubscribe sets this false.
+    emailPreferences: boolean("email_preferences").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -51,6 +54,8 @@ export const urls = pgTable(
     lastClickedAt: timestamp("last_clicked_at", { withTimezone: true }),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    // expired | user | admin. Null on legacy rows, which are never auto-restored.
+    archiveReason: text("archive_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -58,6 +63,26 @@ export const urls = pgTable(
     index("urls_short_code_expires_at_idx").on(table.shortCode, table.expiresAt),
     index("urls_user_id_archived_at_idx").on(table.userId, table.archivedAt),
     index("urls_expires_at_idx").on(table.expiresAt),
+    index("urls_archive_reason_idx").on(table.archiveReason),
+  ]
+);
+
+export const expiryEmails = pgTable(
+  "expiry_emails",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    urlId: uuid("url_id")
+      .notNull()
+      .references(() => urls.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stage: text("stage").notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("expiry_emails_url_id_stage_idx").on(table.urlId, table.stage),
+    index("expiry_emails_user_id_stage_idx").on(table.userId, table.stage),
   ]
 );
 

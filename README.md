@@ -88,12 +88,13 @@ See `.env.example` for the full list. Key variables:
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | Neon Postgres connection string (pooled URL for production) |
-| `CRON_SECRET` | Yes in production | Bearer token for the expired-link cleanup cron job |
+| `CRON_SECRET` | Yes in production | Bearer token for the daily expiry reminder and cleanup cron |
+| `EXPIRY_EMAIL_DRY_RUN` | No | Set to `1` to make that cron count work without sending email or archiving |
 | `NEXTAUTH_SECRET` | Yes | Long random secret for NextAuth |
 | `NEXTAUTH_URL` / `NEXT_PUBLIC_BASE_URL` | Yes | App base URL |
 | `GITHUB_ID` / `GITHUB_SECRET` | No | GitHub OAuth. Links an existing account only after that email is verified |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | No | Cloudflare Turnstile for registration bot protection |
-| `RESEND_API_KEY` / `EMAIL_FROM` | No | Password-reset emails |
+| `RESEND_API_KEY` / `EMAIL_FROM` | No | Verification, password reset, and expiry reminder emails |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | **Yes in production** | Rate limiting and redirect cache |
 | `REDIRECT_CACHE_TTL_SEC` | No | Redirect cache TTL in seconds (default: 300) |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | For billing | Stripe API + webhook |
@@ -126,6 +127,9 @@ Run `npm run seed-demo` or click "Try Demo Account" on the sign-in page (develop
 | POST | `/api/auth/verify/resend` | Resend verification email |
 | POST | `/api/claim` | Claim anonymous links after login |
 | GET | `/api/[shortCode]` | Redirect to original URL |
+| GET | `/api/cron/cleanup-expired` | Daily reminders, then archive expired links (`Authorization: Bearer CRON_SECRET`, `?dryRun=1` to preview) |
+| GET/POST | `/api/email/preferences` | Signed one-click expiry-email preference |
+| GET | `/api/admin/expiry-email-preview` | Admin-only sample of an expiry email (nothing is sent) |
 
 ## Scripts
 

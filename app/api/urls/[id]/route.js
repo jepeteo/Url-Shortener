@@ -8,6 +8,7 @@ import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { validateCsrf } from "@/lib/csrf";
 import { invalidateCachedRedirect } from "@/lib/redirectCache";
 import { ownerVisibleWhere } from "@/lib/urlVisibility";
+import { ARCHIVE_REASONS } from "@/lib/expiry/constants";
 
 export async function GET(request, { params }) {
   const session = await getServerSession(authOptions);
@@ -66,7 +67,7 @@ export async function DELETE(request, { params }) {
 
   const archived = await db
     .update(urls)
-    .set({ archivedAt: new Date() })
+    .set({ archivedAt: new Date(), archiveReason: ARCHIVE_REASONS.user })
     .where(
       and(eq(urls.id, id), eq(urls.userId, session.user.id), isNull(urls.archivedAt))
     )

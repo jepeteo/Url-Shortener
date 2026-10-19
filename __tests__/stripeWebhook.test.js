@@ -3,12 +3,22 @@ import * as analytics from "../lib/analytics";
 import { stripeEvents, users } from "../db/schema";
 import { processStripeEvent, UnknownStripePriceError } from "../lib/stripeWebhook";
 import { getPlanFromPriceId } from "../lib/stripe";
+import { restoreLinksAfterUpgrade } from "../lib/expiry/restore";
+
+vi.mock("../lib/expiry/restore", async () => {
+  const actual = await vi.importActual("../lib/expiry/restore");
+  return {
+    ...actual,
+    restoreLinksAfterUpgrade: vi.fn(async () => ({ count: 0, extended: 0 })),
+  };
+});
 
 function createDb() {
   const events = new Map();
   const updates = [];
   let userWrites = 0;
   let failUserWrite = false;
+  let currentUser = null;
 
   return {
     updates,
@@ -16,9 +26,15 @@ function createDb() {
     failNextUserWrite() {
       failUserWrite = true;
     },
+    setUser(user) {
+      currentUser = user;
+    },
     query: {
       stripeEvents: {
         findFirst: async () => [...events.values()][0],
+      },
+      users: {
+        findFirst: async () => currentUser,
       },
     },
     insert: () => ({
@@ -76,6 +92,7 @@ describe("processStripeEvent", () => {
     }
     analytics.trackEvent.mockResolvedValue({ tracked: true });
     analytics.trackEvent.mockClear();
+    restoreLinksAfterUpgrade.mockClear();
   });
 
   it("does not mark a failed handler processed, so a retry can apply it", async () => {
@@ -198,5 +215,41 @@ describe("processStripeEvent", () => {
       plan: "business",
       interval: "annual",
     });
+    expect(restoreLinksAfterUpgrade).toHaveBeenCalledTimes(1);
+    expect(restoreLinksAfterUpgrade).toHaveBeenCalledWith(db, "user-1", "business");
+  });
+
+  it("restores links when a free subscription becomes active and paid", async () => {
+    const db = createDb();
+    db.setUser({ id: "user-9", plan: "free", paymentStatus: null });
+    await processStripeEvent(db, {
+      id: "evt_restore",
+      type: "customer.subscription.updated",
+      data: {
+        object: {
+          id: "sub_1",
+          status: "active",
+          items: { data: [{ price: { id: "price_pro" } }] },
+        },
+      },
+    });
+    expect(restoreLinksAfterUpgrade).toHaveBeenCalledWith(db, "user-9", "pro");
+  });
+
+  it("does not restore links when an active plan renews", async () => {
+    const db = createDb();
+    db.setUser({ id: "user-9", plan: "pro", paymentStatus: "active" });
+    await processStripeEvent(db, {
+      id: "evt_renew",
+      type: "customer.subscription.updated",
+      data: {
+        object: {
+          id: "sub_1",
+          status: "active",
+          items: { data: [{ price: { id: "price_pro" } }] },
+        },
+      },
+    });
+    expect(restoreLinksAfterUpgrade).not.toHaveBeenCalled();
   });
 });

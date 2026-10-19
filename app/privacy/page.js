@@ -58,6 +58,9 @@ export default function PrivacyPage() {
           <li>your plan (Free, Pro, or Business) and payment status;</li>
           <li>your Stripe customer id and subscription id, when you pay;</li>
           <li>a hash of an API key, and when it was created, on the Business plan;</li>
+          <li>
+            whether you want expiry reminder emails (on unless you turn them off);
+          </li>
           <li>when the account was created.</li>
         </ul>
         <p>
@@ -78,7 +81,10 @@ export default function PrivacyPage() {
             a hash of a creator token, for anonymous links, so the browser that created
             the link can claim it later;
           </li>
-          <li>the click count, last click time, expiry time, and archive time.</li>
+          <li>
+            the click count, last click time, expiry time, archive time, and why it
+            was archived (it expired, you removed it, or we removed it);
+          </li>
         </ul>
         <p>
           The creator token itself sits in an httpOnly cookie in that browser for up
@@ -122,7 +128,15 @@ export default function PrivacyPage() {
           We send email through Resend. That covers email verification, password
           resets, and abuse reports sent to {OPERATOR.abuseEmail}. An abuse report
           contains the URL you report, the reason you choose, and your email address
-          if you choose to leave one. We do not use these messages for marketing.
+          if you choose to leave one. We also email a verified account about links
+          that are about to expire or have just expired: one message when the expiry
+          date is within three days, one on the expiry day, and one after the link
+          has been archived. Each message lists that stage&apos;s links for your
+          account. We do not send a separate email per link, we do not email an
+          unverified address, and anonymous links have no address to use. The
+          message has a link to turn these reminders off. We record which stage we
+          already sent for each link so we do not send it twice. We do not use these
+          messages for marketing.
         </p>
       </LegalSection>
 
@@ -157,10 +171,11 @@ export default function PrivacyPage() {
           from the path, so a verification link or reset link is not included.
         </p>
         <p>
-          We also record three conversion events from the server: signup (a new
-          account was created), link_created, and upgrade (a paid Stripe checkout
-          completed). The only properties on those events are the plan name and, for
-          an upgrade, whether the interval was monthly or annual. They do not include
+          We also record conversion events from the server: signup (a new account
+          was created), link_created, upgrade (a paid Stripe checkout completed),
+          expiry_email_sent (a reminder stage went out), and restore_after_upgrade
+          (how many expired links were restored). The properties are the plan name,
+          the billing interval, the reminder stage, or a count. They do not include
           your name, email, account id, or the destination URL. The server call does
           not forward your session cookie or IP address.
         </p>
@@ -192,8 +207,8 @@ export default function PrivacyPage() {
           <li>
             <strong>Contract (Article 6(1)(b)):</strong> creating and running your
             account, shortening links, applying plan limits and expiry, sending
-            verification and password-reset email, and taking payment for a plan you
-            choose.
+            verification, password-reset, and expiry-reminder email, and taking
+            payment for a plan you choose.
           </li>
           <li>
             <strong>Legitimate interests (Article 6(1)(f)):</strong> click analytics
